@@ -1,0 +1,141 @@
+<svg width="700" height="780" viewBox="0 0 700 780" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Fleex 3PL platform — data model entity map</title>
+<desc>All planned entities grouped by domain: core tenancy, warehouse structure, inventory and receiving, orders and fulfillment, returns, billing, and integrations and audit.</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .t { font-size: 13px; font-weight: 500; }
+  .ts { font-size: 11px; fill: #5F5E5A; }
+  .grp { font-size: 12px; font-weight: 600; }
+  .title { font-size: 16px; font-weight: 600; fill: #2C2C2A; }
+  .note { font-size: 10px; fill: #5F5E5A; }
+  .rel { stroke: #888780; stroke-width: 1; fill: none; }
+  .grpbox { fill: none; stroke-width: 0.5; stroke-dasharray: 3 3; }
+  .purple-f { fill: #EEEDFE; stroke: #534AB7; } .purple-t { fill: #26215C; }
+  .teal-f { fill: #E1F5EE; stroke: #0F6E56; } .teal-t { fill: #04342C; }
+  .blue-f { fill: #E6F1FB; stroke: #185FA5; } .blue-t { fill: #0C447C; }
+  .coral-f { fill: #FAECE7; stroke: #993C1D; } .coral-t { fill: #4A1B0C; }
+  .pink-f { fill: #FBEAF0; stroke: #993556; } .pink-t { fill: #4B1528; }
+  .amber-f { fill: #FAEEDA; stroke: #854F0B; } .amber-t { fill: #412402; }
+  .gray-f { fill: #F1EFE8; stroke: #5F5E5A; } .gray-t { fill: #2C2C2A; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+  <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="title" x="40" y="26">Fleex 3PL platform — data model entity map</text>
+<text class="note" x="40" y="42">Every entity except Company carries companyId (tenant_id) + an RLS policy.</text>
+<text class="note" x="40" y="54">Arrows show ownership / one-to-many relationships.</text>
+
+<!-- Core tenancy -->
+<rect class="grpbox" x="40" y="62" width="300" height="150" rx="10" stroke="#534AB7"/>
+<text class="grp purple-t" x="52" y="80">Core tenancy &amp; identity</text>
+<rect class="purple-f" x="56" y="92" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t purple-t" x="116" y="116" text-anchor="middle">Company</text>
+<rect class="purple-f" x="204" y="92" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t purple-t" x="264" y="116" text-anchor="middle">User</text>
+<rect class="purple-f" x="56" y="156" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t purple-t" x="116" y="180" text-anchor="middle">Client</text>
+<rect class="purple-f" x="204" y="156" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t purple-t" x="264" y="180" text-anchor="middle">ClientUser</text>
+<line x1="176" y1="112" x2="200" y2="112" class="rel" marker-end="url(#arrow)"/>
+<line x1="116" y1="132" x2="116" y2="152" class="rel" marker-end="url(#arrow)"/>
+<line x1="176" y1="176" x2="200" y2="176" class="rel" marker-end="url(#arrow)"/>
+
+<!-- Warehouse structure -->
+<rect class="grpbox" x="360" y="62" width="300" height="150" rx="10" stroke="#0F6E56"/>
+<text class="grp teal-t" x="372" y="80">Warehouse structure</text>
+<rect class="teal-f" x="376" y="92" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="436" y="116" text-anchor="middle">Warehouse</text>
+<rect class="teal-f" x="524" y="92" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="584" y="116" text-anchor="middle">Zone</text>
+<rect class="teal-f" x="376" y="156" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="436" y="180" text-anchor="middle">Aisle</text>
+<rect class="teal-f" x="524" y="156" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="584" y="180" text-anchor="middle">Bin</text>
+<line x1="496" y1="112" x2="520" y2="112" class="rel" marker-end="url(#arrow)"/>
+<line x1="584" y1="132" x2="584" y2="152" class="rel" marker-end="url(#arrow)"/>
+<path d="M436 132 L436 176 L520 176" class="rel" marker-end="url(#arrow)"/>
+
+<!-- Inventory & receiving -->
+<rect class="grpbox" x="40" y="232" width="300" height="150" rx="10" stroke="#185FA5"/>
+<text class="grp blue-t" x="52" y="250">Inventory &amp; receiving</text>
+<rect class="blue-f" x="56" y="262" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="116" y="286" text-anchor="middle">Product / SKU</text>
+<rect class="blue-f" x="204" y="262" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="264" y="286" text-anchor="middle">InventoryItem</text>
+<rect class="blue-f" x="56" y="326" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="116" y="346" text-anchor="middle">Inbound</text>
+<text class="ts" x="116" y="360" text-anchor="middle">Shipment</text>
+<rect class="blue-f" x="204" y="326" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="264" y="346" text-anchor="middle">Receiving</text>
+<text class="ts" x="264" y="360" text-anchor="middle">Record</text>
+<line x1="176" y1="282" x2="200" y2="282" class="rel" marker-end="url(#arrow)"/>
+<line x1="116" y1="302" x2="116" y2="322" class="rel" marker-end="url(#arrow)"/>
+<line x1="176" y1="346" x2="200" y2="346" class="rel" marker-end="url(#arrow)"/>
+
+<!-- Orders & fulfillment -->
+<rect class="grpbox" x="360" y="232" width="300" height="220" rx="10" stroke="#993C1D"/>
+<text class="grp coral-t" x="372" y="250">Orders &amp; fulfillment</text>
+<rect class="coral-f" x="376" y="262" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t coral-t" x="436" y="286" text-anchor="middle">Order</text>
+<rect class="coral-f" x="524" y="262" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t coral-t" x="584" y="282" text-anchor="middle">Order</text>
+<text class="ts" x="584" y="296" text-anchor="middle">LineItem</text>
+<rect class="coral-f" x="376" y="326" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t coral-t" x="436" y="342" text-anchor="middle">Personalization</text>
+<text class="ts" x="436" y="356" text-anchor="middle">Detail</text>
+<rect class="coral-f" x="524" y="326" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t coral-t" x="584" y="342" text-anchor="middle">Pick / Pack</text>
+<text class="ts" x="584" y="356" text-anchor="middle">Task</text>
+<rect class="coral-f" x="376" y="392" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t coral-t" x="436" y="416" text-anchor="middle">Shipment</text>
+<line x1="496" y1="282" x2="520" y2="282" class="rel" marker-end="url(#arrow)"/>
+<line x1="436" y1="302" x2="436" y2="322" class="rel" marker-end="url(#arrow)"/>
+<path d="M584 302 L584 312 L500 312 L500 326" class="rel" marker-end="url(#arrow)"/>
+<path d="M436 366 L436 388" class="rel" marker-end="url(#arrow)"/>
+<path d="M584 366 L584 412 L500 412" class="rel" marker-end="url(#arrow)"/>
+
+<!-- Returns -->
+<rect class="grpbox" x="40" y="402" width="300" height="100" rx="10" stroke="#993556"/>
+<text class="grp pink-t" x="52" y="420">Returns</text>
+<rect class="pink-f" x="56" y="432" width="120" height="50" rx="6" stroke-width="0.5"/>
+<text class="t pink-t" x="116" y="461" text-anchor="middle">ReturnRequest</text>
+<rect class="pink-f" x="204" y="432" width="120" height="50" rx="6" stroke-width="0.5"/>
+<text class="t pink-t" x="264" y="453" text-anchor="middle">Return</text>
+<text class="ts" x="264" y="467" text-anchor="middle">Inspection</text>
+<line x1="176" y1="457" x2="200" y2="457" class="rel" marker-end="url(#arrow)"/>
+
+<!-- Billing -->
+<rect class="grpbox" x="40" y="522" width="300" height="150" rx="10" stroke="#854F0B"/>
+<text class="grp amber-t" x="52" y="540">Billing</text>
+<rect class="amber-f" x="56" y="552" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t amber-t" x="116" y="576" text-anchor="middle">PricingRule</text>
+<rect class="amber-f" x="204" y="552" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t amber-t" x="264" y="572" text-anchor="middle">BillableEvent</text>
+<text class="ts" x="264" y="586" text-anchor="middle">append-only ledger</text>
+<rect class="amber-f" x="56" y="616" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t amber-t" x="116" y="640" text-anchor="middle">Invoice</text>
+<rect class="amber-f" x="204" y="616" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t amber-t" x="264" y="640" text-anchor="middle">Payment</text>
+<line x1="176" y1="572" x2="200" y2="572" class="rel" marker-end="url(#arrow)"/>
+<path d="M264 592 L264 602 L116 602 L116 612" class="rel" marker-end="url(#arrow)"/>
+<line x1="176" y1="636" x2="200" y2="636" class="rel" marker-end="url(#arrow)"/>
+
+<!-- Integrations & audit -->
+<rect class="grpbox" x="360" y="472" width="300" height="200" rx="10" stroke="#5F5E5A"/>
+<text class="grp gray-t" x="372" y="490">Integrations &amp; audit</text>
+<rect class="gray-f" x="376" y="502" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t gray-t" x="436" y="526" text-anchor="middle">Integration</text>
+<rect class="gray-f" x="524" y="502" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t gray-t" x="584" y="526" text-anchor="middle">SyncLog</text>
+<rect class="gray-f" x="376" y="566" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t gray-t" x="436" y="590" text-anchor="middle">AuditLog</text>
+<rect class="gray-f" x="524" y="566" width="120" height="40" rx="6" stroke-width="0.5"/>
+<text class="t gray-t" x="584" y="590" text-anchor="middle">Notification</text>
+<text class="note" x="376" y="632">AuditLog &amp; Notification are</text>
+<text class="note" x="376" y="648">cross-cutting — written by</text>
+<text class="note" x="376" y="664">many domains, not just here.</text>
+<line x1="496" y1="522" x2="520" y2="522" class="rel" marker-end="url(#arrow)"/>
+
+<text class="note" x="40" y="700">Starting point only — expect to add entities (kitting/bundles, cycle-count sessions) later. Add deliberately, with a migration.</text>
+<text class="note" x="40" y="718">Build order: core tenancy (Phase 0), warehouse + inventory + orders (Phase 1), billing (Phase 2), shipping (Phase 3), integrations (4+).</text>
+</svg>

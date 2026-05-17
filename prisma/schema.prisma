@@ -1,0 +1,187 @@
+// ============================================================================
+// Fleex 3PL Platform — Core Prisma Schema (Phase 0)
+// ============================================================================
+//
+// SCOPE: This file covers ONLY the core tenancy entities needed for Phase 0:
+//   Company, User, Client, ClientUser, plus the Role enum and the
+//   multi-tenancy scaffolding.
+//
+// Feature entities (Warehouse, Bin, Product, Order, Invoice, etc.) are added
+// in later phases — see ARCHITECTURE.md §4 for the full planned data model.
+//
+// MULTI-TENANCY: Every table except `Company` carries `companyId` (the owning
+// 3PL — this is the `tenant_id`). Row-Level Security (RLS) policies are applied
+// via raw SQL migrations on top of this schema — Prisma defines the tables,
+// SQL migrations define the RLS policies. See the note at the bottom of this
+// file and ARCHITECTURE.md §3.
+//
+// REVIEW THIS before running the first migration. The schema is the spine of
+// the app — getting it right on paper is cheaper than changing it later.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+/// Roles for a 3PL company's own staff (Warehouse Dashboard users).
+/// Client-side portal users are a separate model (ClientUser) and are not
+/// given these roles.
+enum Role {
+  ADMIN // Full access to the company's account and settings
+  RECEIVER // Checks in inbound inventory
+  PICKER // Picks items for orders
+  PACKER // Packs picked orders
+  SHIPPER // Generates labels and ships orders
+}
+
+/// Lifecycle status shared by Company, User, Client, and ClientUser.
+/// Soft-disable rather than hard-delete so audit history stays intact.
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+// ============================================================================
+// CORE TENANCY ENTITIES
+// ============================================================================
+
+/// A 3PL business using the platform — the paying customer and the top-level
+/// tenant. This is the ONLY table without a `companyId`, because it IS the
+/// company. Everything else belongs to a Company.
+model Company {
+  id        String        @id @default(cuid())
+  name      String
+  status    AccountStatus @default(ACTIVE)
+
+  // --- White-labeling / branding (used by the Client Portal in Phase 5) ---
+  // Present from the start so later phases don't need a migration to add them.
+  logoUrl      String?
+  brandName    String? // Defaults to `name` if not set
+  primaryColor String? // Hex color for portal theming
+
+  // --- Relations ---
+  users   User[]
+  clients Client[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+/// A staff member of a 3PL Company — a Warehouse Dashboard user.
+/// Authentication itself is handled by Clerk; this record stores the
+/// application-side identity, role, and tenant linkage. `authProviderId`
+/// links this row to the Clerk user.
+model User {
+  id             String        @id @default(cuid())
+  authProviderId String        @unique // Clerk user ID
+  email          String
+  name           String
+  role           Role
+  status         AccountStatus @default(ACTIVE)
+
+  // --- Tenancy: the owning 3PL company (this is the tenant_id) ---
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Email is unique per company, not globally — two different 3PLs could
+  // each have a staff member with the same email.
+  @@unique([companyId, email])
+  @@index([companyId])
+  @@index([authProviderId])
+}
+
+/// A customer of a 3PL Company — the business whose inventory the 3PL stores
+/// and whose orders it fulfills. Clients log into the Client Portal.
+///
+/// This is the SECOND level of tenancy: a Client must only ever see its own
+/// data, never another Client's, never the Company's internal operations.
+/// Feature tables added in later phases (Order, Product, etc.) will carry
+/// BOTH `companyId` and `clientId` so both boundaries can be enforced.
+model Client {
+  id     String        @id @default(cuid())
+  name   String
+  status AccountStatus @default(ACTIVE)
+
+  // --- Tenancy: the owning 3PL company (this is the tenant_id) ---
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // --- Relations ---
+  clientUsers ClientUser[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Client name is unique per company, not globally.
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([status])
+}
+
+/// A login identity for a Client — a person at the client business who uses
+/// the Client Portal. A Client may have several ClientUsers.
+/// Authentication is handled by Clerk; `authProviderId` links to the Clerk user.
+model ClientUser {
+  id             String        @id @default(cuid())
+  authProviderId String        @unique // Clerk user ID
+  email          String
+  name           String
+  status         AccountStatus @default(ACTIVE)
+
+  // --- Tenancy ---
+  // Denormalized `companyId` is intentional: it lets RLS policies and queries
+  // enforce the company boundary without always joining through Client.
+  // It must always equal `client.companyId` — enforce this in the service layer.
+  companyId String
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Email is unique per client.
+  @@unique([clientId, email])
+  @@index([clientId])
+  @@index([companyId])
+  @@index([authProviderId])
+}
+
+// ============================================================================
+// ROW-LEVEL SECURITY (RLS) — IMPLEMENTATION NOTE
+// ============================================================================
+//
+// Prisma defines the TABLES above. It does NOT manage RLS policies — those are
+// applied via raw SQL in migrations. For each tenant-scoped table, the Phase 0
+// migration work includes:
+//
+//   1. ALTER TABLE "<table>" ENABLE ROW LEVEL SECURITY;
+//   2. A policy restricting rows to the current tenant context, e.g.:
+//
+//        CREATE POLICY tenant_isolation ON "User"
+//          USING ("companyId" = current_setting('app.current_company_id'));
+//
+//   3. The per-request tenant-context middleware sets `app.current_company_id`
+//      (and, for portal requests, the client context) at the start of every
+//      request — see ARCHITECTURE.md §3.
+//
+// RULE (from CLAUDE.md): every new tenant-scoped table gets `companyId` PLUS an
+// RLS policy IN THE SAME MIGRATION — never as a follow-up.
+//
+// Phase 0 is not done until an automated test proves Client A cannot read
+// Client B's data through the API.
+// ============================================================================

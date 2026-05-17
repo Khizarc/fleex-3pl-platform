@@ -1,0 +1,98 @@
+<svg width="700" height="640" viewBox="0 0 700 640" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Fleex inventory, inbound shipment, and return state machines</title>
+<desc>Three state machines: inventory item status, inbound shipment status, and return request status.</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .t { font-size: 13px; font-weight: 500; }
+  .ts { font-size: 11px; fill: #5F5E5A; }
+  .title { font-size: 16px; font-weight: 600; fill: #2C2C2A; }
+  .grp { font-size: 13px; font-weight: 600; }
+  .note { font-size: 10px; fill: #5F5E5A; }
+  .arr { stroke: #888780; stroke-width: 1.5; fill: none; }
+  .blue-f { fill: #E6F1FB; stroke: #185FA5; } .blue-t { fill: #0C447C; }
+  .teal-f { fill: #E1F5EE; stroke: #0F6E56; } .teal-t { fill: #04342C; }
+  .pink-f { fill: #FBEAF0; stroke: #993556; } .pink-t { fill: #4B1528; }
+  .red-f { fill: #FCEBEB; stroke: #A32D2D; } .red-t { fill: #501313; }
+  .gray-f { fill: #F1EFE8; stroke: #5F5E5A; } .gray-t { fill: #2C2C2A; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+  <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="title" x="40" y="28">Inventory, inbound &amp; return state machines</text>
+<text class="note" x="40" y="46">Same rule as orders: every transition validated at the service layer, never written directly.</text>
+
+<!-- Inventory item -->
+<text class="grp blue-t" x="40" y="78">Inventory item status</text>
+<rect class="blue-f" x="40" y="90" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="95" y="108" text-anchor="middle">inbound</text>
+<text class="ts" x="95" y="122" text-anchor="middle">_expected</text>
+<rect class="blue-f" x="190" y="90" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="245" y="114" text-anchor="middle">received</text>
+<rect class="blue-f" x="340" y="90" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="395" y="114" text-anchor="middle">available</text>
+<rect class="blue-f" x="490" y="90" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="545" y="114" text-anchor="middle">reserved</text>
+<rect class="blue-f" x="190" y="160" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="245" y="184" text-anchor="middle">picked</text>
+<rect class="blue-f" x="340" y="160" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="395" y="184" text-anchor="middle">packed</text>
+<rect class="blue-f" x="490" y="160" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t blue-t" x="545" y="184" text-anchor="middle">shipped</text>
+<rect class="red-f" x="40" y="160" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t red-t" x="95" y="178" text-anchor="middle">on_hold /</text>
+<text class="ts" x="95" y="192" text-anchor="middle">damaged</text>
+<line x1="150" y1="110" x2="186" y2="110" class="arr" marker-end="url(#arrow)"/>
+<line x1="300" y1="110" x2="336" y2="110" class="arr" marker-end="url(#arrow)"/>
+<line x1="450" y1="110" x2="486" y2="110" class="arr" marker-end="url(#arrow)"/>
+<path d="M545 130 L545 145 L245 145 L245 156" class="arr" marker-end="url(#arrow)"/>
+<line x1="300" y1="180" x2="336" y2="180" class="arr" marker-end="url(#arrow)"/>
+<line x1="450" y1="180" x2="486" y2="180" class="arr" marker-end="url(#arrow)"/>
+<path d="M395 130 L395 142 L120 142 L120 156" class="arr" marker-end="url(#arrow)"/>
+<text class="note" x="40" y="216">"any state" can move to on_hold / damaged with a reason + actor. Returned items re-enter via inspecting (see below).</text>
+
+<!-- Inbound shipment -->
+<text class="grp teal-t" x="40" y="262">Inbound shipment status</text>
+<rect class="teal-f" x="40" y="274" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="95" y="298" text-anchor="middle">notified</text>
+<rect class="teal-f" x="190" y="274" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="245" y="298" text-anchor="middle">in_transit</text>
+<rect class="teal-f" x="340" y="274" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="395" y="298" text-anchor="middle">arrived</text>
+<rect class="teal-f" x="490" y="274" width="110" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="545" y="298" text-anchor="middle">receiving</text>
+<rect class="teal-f" x="265" y="334" width="170" height="40" rx="6" stroke-width="0.5"/>
+<text class="t teal-t" x="350" y="352" text-anchor="middle">completed</text>
+<text class="ts" x="350" y="366" text-anchor="middle">(or completed_with_discrepancies)</text>
+<line x1="150" y1="294" x2="186" y2="294" class="arr" marker-end="url(#arrow)"/>
+<line x1="300" y1="294" x2="336" y2="294" class="arr" marker-end="url(#arrow)"/>
+<line x1="450" y1="294" x2="486" y2="294" class="arr" marker-end="url(#arrow)"/>
+<path d="M545 314 L545 328 L420 354 L438 354" class="arr" marker-end="url(#arrow)"/>
+
+<!-- Return request -->
+<text class="grp pink-t" x="40" y="420">Return request status</text>
+<rect class="pink-f" x="40" y="432" width="100" height="40" rx="6" stroke-width="0.5"/>
+<text class="t pink-t" x="90" y="456" text-anchor="middle">requested</text>
+<rect class="pink-f" x="170" y="432" width="100" height="40" rx="6" stroke-width="0.5"/>
+<text class="t pink-t" x="220" y="450" text-anchor="middle">approved</text>
+<text class="ts" x="220" y="464" text-anchor="middle">(optional)</text>
+<rect class="pink-f" x="300" y="432" width="100" height="40" rx="6" stroke-width="0.5"/>
+<text class="t pink-t" x="350" y="456" text-anchor="middle">in_transit</text>
+<rect class="pink-f" x="430" y="432" width="100" height="40" rx="6" stroke-width="0.5"/>
+<text class="t pink-t" x="480" y="456" text-anchor="middle">received</text>
+<rect class="pink-f" x="560" y="432" width="100" height="40" rx="6" stroke-width="0.5"/>
+<text class="t pink-t" x="610" y="456" text-anchor="middle">inspecting</text>
+<rect class="gray-f" x="170" y="502" width="220" height="40" rx="6" stroke-width="0.5"/>
+<text class="t gray-t" x="280" y="520" text-anchor="middle">resolved</text>
+<text class="ts" x="280" y="534" text-anchor="middle">restock | quarantine | dispose</text>
+<rect class="red-f" x="430" y="502" width="100" height="40" rx="6" stroke-width="0.5"/>
+<text class="t red-t" x="480" y="526" text-anchor="middle">rejected</text>
+<line x1="140" y1="452" x2="166" y2="452" class="arr" marker-end="url(#arrow)"/>
+<line x1="270" y1="452" x2="296" y2="452" class="arr" marker-end="url(#arrow)"/>
+<line x1="400" y1="452" x2="426" y2="452" class="arr" marker-end="url(#arrow)"/>
+<line x1="530" y1="452" x2="556" y2="452" class="arr" marker-end="url(#arrow)"/>
+<path d="M610 472 L610 522 L534 522" class="arr" marker-end="url(#arrow)"/>
+<path d="M610 472 L610 488 L280 488 L280 498" class="arr" marker-end="url(#arrow)"/>
+
+<text class="note" x="40" y="580">A restocked return re-enters the inventory item machine at "available". Quarantine and dispose are terminal for that item.</text>
+<text class="note" x="40" y="598">The Invoice state machine (draft &#8594; finalized &#8594; sent &#8594; paid / overdue / void) is covered in the billing flow.</text>
+</svg>

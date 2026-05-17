@@ -1,0 +1,58 @@
+<svg width="700" height="740" viewBox="0 0 700 740" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Fleex order fulfillment lifecycle</title>
+<desc>The six-step flow from client sending inventory through receiving, order entry, fulfillment, shipping, tracking, and billing.</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .t { font-size: 14px; font-weight: 500; }
+  .ts { font-size: 12px; fill: #5F5E5A; }
+  .title { font-size: 16px; font-weight: 600; fill: #2C2C2A; }
+  .arr { stroke: #888780; stroke-width: 1.5; fill: none; }
+  .divider { stroke: #B4B2A9; stroke-width: 0.5; stroke-dasharray: 4 4; }
+  .gray-f { fill: #F1EFE8; stroke: #5F5E5A; } .gray-t { fill: #2C2C2A; }
+  .blue-f { fill: #E6F1FB; stroke: #185FA5; } .blue-t { fill: #0C447C; }
+  .amber-f { fill: #FAEEDA; stroke: #854F0B; } .amber-t { fill: #412402; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+  <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="title" x="40" y="28">Fleex order fulfillment lifecycle</text>
+
+<text class="ts" x="180" y="56" text-anchor="middle">Client drives</text>
+<text class="ts" x="520" y="56" text-anchor="middle">Warehouse drives</text>
+<line x1="350" y1="66" x2="350" y2="710" class="divider"/>
+
+<rect class="gray-f" x="60" y="76" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="t gray-t" x="180" y="100" text-anchor="middle">1. Client sends inventory</text>
+<text class="ts" x="180" y="118" text-anchor="middle">Creates an inbound notice</text>
+
+<rect class="blue-f" x="400" y="176" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="t blue-t" x="520" y="200" text-anchor="middle">2. Warehouse receives</text>
+<text class="ts" x="520" y="218" text-anchor="middle">Scan, verify, assign to bin</text>
+
+<rect class="gray-f" x="60" y="276" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="t gray-t" x="180" y="300" text-anchor="middle">3. Orders flow in</text>
+<text class="ts" x="180" y="318" text-anchor="middle">Sync, portal, or CSV upload</text>
+
+<rect class="blue-f" x="400" y="376" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="t blue-t" x="520" y="400" text-anchor="middle">4. Team fulfills</text>
+<text class="ts" x="520" y="418" text-anchor="middle">Pick, pack, personalize</text>
+
+<rect class="blue-f" x="400" y="476" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="t blue-t" x="520" y="500" text-anchor="middle">5. Shipping</text>
+<text class="ts" x="520" y="518" text-anchor="middle">Compare rates, label, validate</text>
+
+<rect class="gray-f" x="60" y="576" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="t gray-t" x="180" y="600" text-anchor="middle">6a. Client stays informed</text>
+<text class="ts" x="180" y="618" text-anchor="middle">Automatic tracking updates</text>
+
+<rect class="amber-f" x="400" y="646" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="t amber-t" x="520" y="670" text-anchor="middle">6b. Billing runs itself</text>
+<text class="ts" x="520" y="688" text-anchor="middle">Ledger, invoice, auto-collect</text>
+
+<path d="M300 104 L350 104 L350 204 L398 204" class="arr" marker-end="url(#arrow)"/>
+<path d="M520 232 L520 254 L350 254 L350 304 L302 304" class="arr" marker-end="url(#arrow)"/>
+<path d="M300 304 L350 304 L350 404 L398 404" class="arr" marker-end="url(#arrow)"/>
+<line x1="520" y1="432" x2="520" y2="472" class="arr" marker-end="url(#arrow)"/>
+<path d="M400 504 L350 504 L350 604 L302 604" class="arr" marker-end="url(#arrow)"/>
+<path d="M300 604 L350 604 L350 674 L398 674" class="arr" marker-end="url(#arrow)"/>
+</svg>

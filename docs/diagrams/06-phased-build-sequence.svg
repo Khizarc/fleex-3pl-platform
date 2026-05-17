@@ -1,0 +1,61 @@
+<svg width="700" height="620" viewBox="0 0 700 620" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Fleex 3PL platform — phased build sequence</title>
+<desc>The seven build phases in dependency order, from foundations through hardening, with what each phase delivers.</desc>
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .t { font-size: 14px; font-weight: 500; }
+  .ts { font-size: 12px; fill: #5F5E5A; }
+  .title { font-size: 16px; font-weight: 600; fill: #2C2C2A; }
+  .note { font-size: 11px; fill: #5F5E5A; }
+  .arr { stroke: #888780; stroke-width: 1.5; fill: none; }
+  .gray-f { fill: #F1EFE8; stroke: #5F5E5A; } .gray-t { fill: #2C2C2A; }
+  .purple-f { fill: #EEEDFE; stroke: #534AB7; } .purple-t { fill: #26215C; }
+  .blue-f { fill: #E6F1FB; stroke: #185FA5; } .blue-t { fill: #0C447C; }
+  .amber-f { fill: #FAEEDA; stroke: #854F0B; } .amber-t { fill: #412402; }
+  .teal-f { fill: #E1F5EE; stroke: #0F6E56; } .teal-t { fill: #04342C; }
+  .coral-f { fill: #FAECE7; stroke: #993C1D; } .coral-t { fill: #4A1B0C; }
+  .green-f { fill: #EAF3DE; stroke: #3B6D11; } .green-t { fill: #173404; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+  <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="title" x="40" y="28">Phased build sequence</text>
+<text class="note" x="40" y="46">Dependency order. Do not start a phase until the previous phase's definition of done — including tenant-isolation tests — is met.</text>
+
+<rect class="purple-f" x="120" y="62" width="460" height="56" rx="8" stroke-width="0.5"/>
+<text class="t purple-t" x="350" y="84" text-anchor="middle">Phase 0 — Foundations</text>
+<text class="ts" x="350" y="104" text-anchor="middle">Repo, strict TS, tooling + CI, multi-tenancy + RLS, auth, app shells, core schema</text>
+
+<rect class="blue-f" x="120" y="138" width="460" height="56" rx="8" stroke-width="0.5"/>
+<text class="t blue-t" x="350" y="160" text-anchor="middle">Phase 1 — Core fulfillment loop</text>
+<text class="ts" x="350" y="180" text-anchor="middle">Warehouses, inventory, receiving, manual orders, pick/pack/ship — no integrations</text>
+
+<rect class="amber-f" x="120" y="214" width="460" height="56" rx="8" stroke-width="0.5"/>
+<text class="t amber-t" x="350" y="236" text-anchor="middle">Phase 2 — Billing &amp; money</text>
+<text class="ts" x="350" y="256" text-anchor="middle">Pricing rules, billable-event ledger, invoicing, Stripe payments</text>
+
+<rect class="teal-f" x="120" y="290" width="460" height="56" rx="8" stroke-width="0.5"/>
+<text class="t teal-t" x="350" y="312" text-anchor="middle">Phase 3 — Shipping engine</text>
+<text class="ts" x="350" y="332" text-anchor="middle">EasyPost: rate comparison, labels, address validation, tracking, batch</text>
+
+<rect class="coral-f" x="120" y="366" width="460" height="56" rx="8" stroke-width="0.5"/>
+<text class="t coral-t" x="350" y="388" text-anchor="middle">Phase 4 — Marketplace integrations</text>
+<text class="ts" x="350" y="408" text-anchor="middle">Shopify, then Amazon, then WooCommerce — each its own milestone</text>
+
+<rect class="green-f" x="120" y="442" width="460" height="56" rx="8" stroke-width="0.5"/>
+<text class="t green-t" x="350" y="464" text-anchor="middle">Phase 5 — Portal polish, white-labeling, analytics</text>
+<text class="ts" x="350" y="484" text-anchor="middle">Branding, returns flow, analytics, QuickBooks, exports + scheduled reports</text>
+
+<rect class="gray-f" x="120" y="518" width="460" height="56" rx="8" stroke-width="0.5"/>
+<text class="t gray-t" x="350" y="540" text-anchor="middle">Phase 6 — Hardening</text>
+<text class="ts" x="350" y="560" text-anchor="middle">Security review, load testing, backups + restore drill, monitoring</text>
+
+<line x1="350" y1="118" x2="350" y2="134" class="arr" marker-end="url(#arrow)"/>
+<line x1="350" y1="194" x2="350" y2="210" class="arr" marker-end="url(#arrow)"/>
+<line x1="350" y1="270" x2="350" y2="286" class="arr" marker-end="url(#arrow)"/>
+<line x1="350" y1="346" x2="350" y2="362" class="arr" marker-end="url(#arrow)"/>
+<line x1="350" y1="422" x2="350" y2="438" class="arr" marker-end="url(#arrow)"/>
+<line x1="350" y1="498" x2="350" y2="514" class="arr" marker-end="url(#arrow)"/>
+
+<text class="note" x="40" y="600">Each phase ends in something demonstrable. Phase 1 alone is the first realistic deliverable — worth discussing a phased contract with the business.</text>
+</svg>
