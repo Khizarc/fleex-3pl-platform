@@ -56,6 +56,25 @@ enum AccountStatus {
   DISABLED
 }
 
+/// State machine for InboundShipment (Milestone 1.3). Legal transitions are
+/// validated at the service layer via features/inbound/state-machine.ts.
+enum InboundShipmentStatus {
+  NOTIFIED // client created the notice
+  RECEIVING // staff has started checking it in
+  COMPLETED // done, every line matches expected
+  COMPLETED_WITH_DISCREPANCIES // done, at least one line's actual ≠ expected
+}
+
+/// Status of a StockLevel row. Splitting available vs reserved vs on_hold vs
+/// damaged into separate rows keeps each transition clean and running totals
+/// trivially queryable (one row per (sku, bin, status)).
+enum StockLevelStatus {
+  AVAILABLE
+  RESERVED
+  ON_HOLD
+  DAMAGED
+}
+
 // ============================================================================
 // CORE TENANCY ENTITIES
 // ============================================================================
@@ -101,6 +120,9 @@ model User {
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  // --- Relations (Milestone 1.3+) ---
+  receivedInboundLines InboundShipmentLine[] @relation("ReceivedBy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -128,8 +150,9 @@ model Client {
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // --- Relations ---
-  clientUsers ClientUser[]
-  products    Product[]
+  clientUsers      ClientUser[]
+  products         Product[]
+  inboundShipments InboundShipment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -189,7 +212,8 @@ model Warehouse {
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  zones Zone[]
+  zones            Zone[]
+  inboundShipments InboundShipment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -237,7 +261,7 @@ model Aisle {
   @@index([zoneId])
 }
 
-/// A single storage location (e.g., "A1-01"). Inventory lives in bins (Phase 1.3+).
+/// A single storage location (e.g., "A1-01"). Inventory lives in bins.
 model Bin {
   id     String        @id @default(cuid())
   label  String
@@ -246,7 +270,9 @@ model Bin {
   aisleId   String
   companyId String // denormalized from aisle.companyId
 
-  aisle Aisle @relation(fields: [aisleId], references: [id], onDelete: Cascade)
+  aisle                Aisle                 @relation(fields: [aisleId], references: [id], onDelete: Cascade)
+  stockLevels          StockLevel[]
+  inboundShipmentLines InboundShipmentLine[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -301,13 +327,108 @@ model SKU {
   clientId  String
   companyId String
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product              Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stockLevels          StockLevel[]
+  inboundShipmentLines InboundShipmentLine[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([clientId, code])
   @@index([productId])
+  @@index([clientId])
+  @@index([companyId])
+}
+
+// ============================================================================
+// INBOUND SHIPMENTS + STOCK LEVELS (Milestone 1.3)
+// ============================================================================
+// A client notifies the 3PL that inventory is coming. Staff receives it
+// against bins. The act of receiving materializes StockLevel rows — the
+// atomic unit of inventory (quantity of SKU in Bin, with status).
+// Two-level tenant-scoped, same RLS pattern as Product/SKU.
+
+/// A client's notice that inventory is on the way.
+model InboundShipment {
+  id                String                @id @default(cuid())
+  reference         String?
+  expectedArrivalAt DateTime?
+  notes             String?
+  status            InboundShipmentStatus @default(NOTIFIED)
+
+  clientId    String
+  companyId   String
+  warehouseId String
+
+  client    Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  warehouse Warehouse             @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  lines     InboundShipmentLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([companyId])
+  @@index([warehouseId])
+  @@index([status])
+}
+
+/// One line of an inbound shipment. expectedQuantity is set on creation;
+/// actualQuantity / binId / receivedAt / receivedByUserId are set during
+/// the staff receive workflow.
+model InboundShipmentLine {
+  id String @id @default(cuid())
+
+  inboundShipmentId String
+  skuId             String
+  expectedQuantity  Int
+
+  actualQuantity   Int?
+  binId            String?
+  receivedAt       DateTime?
+  receivedByUserId String?
+  notes            String?
+
+  clientId  String // denormalized from inboundShipment.clientId
+  companyId String // denormalized
+
+  inboundShipment InboundShipment @relation(fields: [inboundShipmentId], references: [id], onDelete: Cascade)
+  sku             SKU             @relation(fields: [skuId], references: [id], onDelete: Restrict)
+  bin             Bin?            @relation(fields: [binId], references: [id], onDelete: Restrict)
+  receivedBy      User?           @relation("ReceivedBy", fields: [receivedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([inboundShipmentId])
+  @@index([skuId])
+  @@index([clientId])
+  @@index([companyId])
+}
+
+/// Quantity of a SKU in a Bin with a status. The atomic unit of inventory.
+/// Splitting available/reserved/on_hold/damaged into separate rows keeps
+/// state transitions clean and running totals trivial to query.
+model StockLevel {
+  id       String           @id @default(cuid())
+  quantity Int
+  status   StockLevelStatus @default(AVAILABLE)
+
+  skuId String
+  binId String
+
+  clientId  String
+  companyId String
+
+  sku SKU @relation(fields: [skuId], references: [id], onDelete: Restrict)
+  bin Bin @relation(fields: [binId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([skuId, binId, status])
+  @@index([skuId])
+  @@index([binId])
   @@index([clientId])
   @@index([companyId])
 }

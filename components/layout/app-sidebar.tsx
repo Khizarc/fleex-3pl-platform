@@ -8,6 +8,7 @@ import {
   Package,
   Settings,
   ShoppingBag,
+  Truck,
   Users,
   Warehouse,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/warehouse' },
   { label: 'Clients', icon: Users, href: '/warehouse/clients' },
   { label: 'Warehouses', icon: Building2, href: '/warehouse/warehouses' },
+  { label: 'Inbound shipments', icon: Truck, href: '/warehouse/inbound-shipments' },
   { label: 'Inventory', icon: Boxes, comingIn: '1.4' },
   { label: 'Orders', icon: ShoppingBag, comingIn: '1.5' },
   { label: 'Settings', icon: Settings, comingIn: 'Phase 5' },
@@ -35,6 +37,7 @@ const warehouseNav: SidebarNavItemProps[] = [
 const portalNav: SidebarNavItemProps[] = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/portal' },
   { label: 'Products', icon: Package, href: '/portal/products' },
+  { label: 'Inbound shipments', icon: Truck, href: '/portal/inbound-shipments' },
   { label: 'Inventory', icon: Boxes, comingIn: '1.4' },
   { label: 'Orders', icon: ShoppingBag, comingIn: '1.5' },
   { label: 'Returns', icon: ArchiveRestore, comingIn: 'Phase 5' },
