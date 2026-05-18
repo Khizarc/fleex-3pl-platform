@@ -13,7 +13,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className="bg-background text-foreground antialiased">
+        {/*
+         * suppressHydrationWarning on <body> too: browser extensions
+         * (Grammarly, LanguageTool, password managers, etc.) inject
+         * data-* attributes here client-side, which would otherwise
+         * trigger a harmless but noisy hydration warning.
+         */}
+        <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
           <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
         </body>
       </html>
