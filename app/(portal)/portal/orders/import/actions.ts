@@ -1,16 +1,20 @@
 'use server';
 
-// Portal-side server actions for bulk CSV order import (Milestone 1.6).
+// Portal-side server actions for bulk CSV order import (Milestone 1.6 + 1.7).
 //
-// Two endpoints:
-//   - resolveSkusAction(codes)  — used by the client to flag unknown SKUs
-//     in the preview. RLS-scoped to the portal caller's client.
+// Endpoints:
+//   - resolveSkusAction(codes)  — flag unknown SKUs in the preview.
+//   - resolvePersonalizationFieldsAction() — surface the client's active
+//     personalization definitions so the validator can recognize columns
+//     and flag unknown / disabled / missing-required values pre-commit.
 //   - importOrdersAction(orders) — re-validates client-supplied groups,
+//     re-resolves SKUs + definitions server-side as the source of truth,
 //     then runs the serial bulkCreateOrders. Never throws.
 
 import { z } from 'zod';
 import { getCurrentClientContext } from '@/lib/auth';
 import { bulkCreateOrders, type BulkCreateOrdersResult } from '@/features/orders';
+import { listActivePersonalizationFields } from '@/features/personalization';
 import { resolveSkusByCode } from '@/features/products';
 
 const groupedOrderSchema = z.object({
@@ -32,6 +36,7 @@ const groupedOrderSchema = z.object({
         skuId: z.string().min(1),
         skuCode: z.string().min(1),
         quantity: z.number().int().positive(),
+        personalization: z.record(z.string(), z.string().max(500)).optional(),
       }),
     )
     .min(1),
@@ -43,13 +48,35 @@ export async function resolveSkusAction(
   codes: string[],
 ): Promise<Record<string, { id: string; name: string } | null>> {
   if (!Array.isArray(codes) || codes.length === 0) return {};
-  if (codes.length > 5000) {
-    // Defensive cap. UI never sends this many but guard anyway.
-    return {};
-  }
+  if (codes.length > 5000) return {};
   const { tenant } = await getCurrentClientContext();
   const map = await resolveSkusByCode(tenant, codes);
   return Object.fromEntries(map);
+}
+
+export type ResolvedPersonalizationField = {
+  id: string;
+  key: string;
+  label: string;
+  required: boolean;
+  status: 'ACTIVE' | 'SUSPENDED' | 'DISABLED';
+};
+
+export async function resolvePersonalizationFieldsAction(): Promise<
+  ResolvedPersonalizationField[]
+> {
+  const { tenant } = await getCurrentClientContext();
+  // Active only — preview should match createOrder semantics. Disabled
+  // fields surface as "unknown column" errors in the validator which is
+  // honest: the user can't capture them anyway.
+  const fields = await listActivePersonalizationFields(tenant);
+  return fields.map((f) => ({
+    id: f.id,
+    key: f.key,
+    label: f.label,
+    required: f.required,
+    status: f.status as 'ACTIVE' | 'SUSPENDED' | 'DISABLED',
+  }));
 }
 
 type ImportResult = { ok: true; data: BulkCreateOrdersResult } | { ok: false; error: string };
@@ -75,9 +102,6 @@ export async function importOrdersAction(orders: unknown[]): Promise<ImportResul
 
   const { tenant, client, clientUser } = await getCurrentClientContext();
 
-  // Re-resolve SKUs server-side as the source of truth — the client-supplied
-  // skuId could be stale or tampered with. We re-look-up by code and use
-  // those IDs (which RLS guarantees belong to the caller's client).
   const allCodes = parsed.data.flatMap((o) => o.lines.map((l) => l.skuCode));
   const skuMap = await resolveSkusByCode(tenant, allCodes);
 
@@ -87,11 +111,12 @@ export async function importOrdersAction(orders: unknown[]): Promise<ImportResul
       skuId: skuMap.get(l.skuCode)?.id ?? l.skuId,
       skuCode: l.skuCode,
       quantity: l.quantity,
+      personalization: l.personalization,
     })),
   }));
 
-  // Any code that didn't resolve becomes a per-order failure inside
-  // bulkCreateOrders (createOrder rejects "SKUs do not belong to this client").
+  // createOrder re-validates personalization against the client's current
+  // active fields inside its own transaction — no extra plumbing needed here.
   const result = await bulkCreateOrders(tenant, {
     clientId: client.id,
     createdByClientUserId: clientUser.id,

@@ -19,6 +19,10 @@ const trimmedString = (max: number, label: string) =>
 export const orderLineInputSchema = z.object({
   skuId: z.string().min(1, 'Pick a SKU'),
   quantity: positiveInt,
+  // Optional per-line personalization values. Keys must match an ACTIVE
+  // PersonalizationField for the client (enforced at service layer). Values
+  // capped at 500 chars; empty strings are dropped (treated as absent).
+  personalization: z.record(z.string(), z.string().max(500)).optional(),
 });
 
 export const createOrderInputSchema = z.object({

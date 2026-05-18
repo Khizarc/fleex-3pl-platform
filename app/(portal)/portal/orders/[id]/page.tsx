@@ -89,10 +89,22 @@ export default async function PortalOrderDetailPage({
             <TableBody>
               {order.lines.map((l) => (
                 <TableRow key={l.id}>
-                  <TableCell className="font-mono text-sm">{l.sku.code}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{l.sku.name}</TableCell>
-                  <TableCell className="text-right">{l.quantity}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
+                  <TableCell className="align-top font-mono text-sm">{l.sku.code}</TableCell>
+                  <TableCell className="text-muted-foreground align-top text-sm">
+                    <div>{l.sku.name}</div>
+                    {l.personalizations.length > 0 ? (
+                      <dl className="text-muted-foreground mt-1 grid grid-cols-[max-content_1fr] gap-x-2 gap-y-0.5 text-xs">
+                        {l.personalizations.map((p) => (
+                          <div key={p.id} className="contents">
+                            <dt className="font-mono">{p.fieldKey}</dt>
+                            <dd className="text-foreground">{p.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-right align-top">{l.quantity}</TableCell>
+                  <TableCell className="text-muted-foreground align-top text-sm">
                     {l.allocations.length === 0 ? (
                       <span className="text-muted-foreground">—</span>
                     ) : (

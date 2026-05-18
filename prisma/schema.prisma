@@ -174,10 +174,11 @@ model Client {
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // --- Relations ---
-  clientUsers      ClientUser[]
-  products         Product[]
-  inboundShipments InboundShipment[]
-  orders           Order[]
+  clientUsers          ClientUser[]
+  products             Product[]
+  inboundShipments     InboundShipment[]
+  orders               Order[]
+  personalizationFields PersonalizationField[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -532,9 +533,10 @@ model OrderLineItem {
   clientId  String
   companyId String
 
-  order       Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  sku         SKU                   @relation(fields: [skuId], references: [id], onDelete: Restrict)
-  allocations OrderLineAllocation[]
+  order            Order                      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sku              SKU                        @relation(fields: [skuId], references: [id], onDelete: Restrict)
+  allocations      OrderLineAllocation[]
+  personalizations OrderLinePersonalization[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -568,6 +570,70 @@ model OrderLineAllocation {
   @@unique([orderLineItemId, binId])
   @@index([orderLineItemId])
   @@index([binId])
+  @@index([clientId])
+  @@index([companyId])
+}
+
+// ============================================================================
+// PERSONALIZATION (Milestone 1.7)
+// ============================================================================
+// Per-client custom field definitions; per-order-line values captured on
+// create. Values surface on order detail (1.7) and the pack screen (1.9).
+// Two-level tenant-scoped, same RLS pattern as Order/OrderLineItem.
+//
+// Soft-delete via status = DISABLED so historical values never orphan.
+// `key` is immutable once any OrderLinePersonalization references the field
+// — enforced in the service layer.
+
+/// A client-defined custom field that can be captured on each order line.
+/// `key` matches the CSV header normalization: ^[a-z][a-z0-9_]{0,49}$.
+model PersonalizationField {
+  id          String        @id @default(cuid())
+  key         String
+  label       String
+  description String?
+  required    Boolean       @default(false)
+  sortOrder   Int           @default(0)
+  status      AccountStatus @default(ACTIVE)
+
+  // Two-level tenancy
+  clientId  String
+  companyId String
+
+  client Client                     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  values OrderLinePersonalization[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, key])
+  @@index([clientId, status])
+  @@index([companyId])
+}
+
+/// One captured value for one (orderLineItem, fieldDefinition).
+/// `fieldKey` snapshots the field's key at capture time so the pack screen
+/// and history queries don't need to re-read the (possibly disabled) field.
+model OrderLinePersonalization {
+  id              String @id @default(cuid())
+  orderLineItemId String
+  fieldId         String
+  fieldKey        String
+  value           String
+
+  // Denormalized from orderLineItem — required for two-level RLS.
+  clientId  String
+  companyId String
+
+  orderLineItem OrderLineItem        @relation(fields: [orderLineItemId], references: [id], onDelete: Cascade)
+  field         PersonalizationField @relation(fields: [fieldId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orderLineItemId, fieldId])
+  @@index([orderLineItemId])
+  @@index([fieldId])
   @@index([clientId])
   @@index([companyId])
 }

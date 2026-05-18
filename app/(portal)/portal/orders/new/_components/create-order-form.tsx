@@ -31,8 +31,15 @@ import { createOrderInputSchema, type CreateOrderInput } from '@/features/orders
 import { createOrderAction } from '../../actions';
 
 type SkuOption = { id: string; code: string; name: string };
+type FieldDef = { id: string; key: string; label: string; required: boolean };
 
-export function CreateOrderForm({ skus }: { skus: SkuOption[] }) {
+export function CreateOrderForm({
+  skus,
+  definitions,
+}: {
+  skus: SkuOption[];
+  definitions: FieldDef[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -209,62 +216,92 @@ export function CreateOrderForm({ skus }: { skus: SkuOption[] }) {
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {fields.map((row, i) => (
-              <div key={row.id} className="grid grid-cols-[1fr_120px_auto] items-end gap-2">
-                <FormField
-                  control={form.control}
-                  name={`lines.${i}.skuId`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">SKU</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+              <div key={row.id} className="space-y-2 rounded-md border p-3">
+                <div className="grid grid-cols-[1fr_120px_auto] items-end gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`lines.${i}.skuId`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">SKU</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pick a SKU" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {skus.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                <span className="font-mono">{s.code}</span> — {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`lines.${i}.quantity`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Quantity</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pick a SKU" />
-                          </SelectTrigger>
+                          <Input
+                            type="number"
+                            min={1}
+                            {...field}
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {skus.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              <span className="font-mono">{s.code}</span> — {s.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`lines.${i}.quantity`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Quantity</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          {...field}
-                          value={field.value}
-                          onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => remove(i)}
-                  disabled={fields.length <= 1}
-                  aria-label="Remove line"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => remove(i)}
+                    disabled={fields.length <= 1}
+                    aria-label="Remove line"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+                {definitions.length > 0 ? (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {definitions.map((def) => (
+                      <FormField
+                        key={def.id}
+                        control={form.control}
+                        name={`lines.${i}.personalization.${def.key}`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">
+                              {def.label}
+                              {def.required ? <span className="text-destructive"> *</span> : null}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value ?? ''}
+                                maxLength={500}
+                                placeholder={def.required ? 'Required' : 'Optional'}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

@@ -126,7 +126,7 @@ describe('validateRows — unresolved SKU', () => {
 describe('validateRows — row count cap', () => {
   it('rejects the entire file if rows exceed the cap', () => {
     const rows = Array.from({ length: 3 }, () => row());
-    const { orders, rowErrors } = validateRows(rows, skuLookup, { maxRows: 2 });
+    const { orders, rowErrors } = validateRows(rows, skuLookup, [], { maxRows: 2 });
     expect(orders).toHaveLength(0);
     expect(rowErrors).toHaveLength(1);
     expect(rowErrors[0]!.message).toMatch(/limit is 2/);

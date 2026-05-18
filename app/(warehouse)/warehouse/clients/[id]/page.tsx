@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft, Package } from 'lucide-react';
+import { ChevronLeft, Package, Sparkles } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { ProductsTable } from '@/components/products/products-table';
 import { CreateProductDialog } from '@/components/products/create-product-dialog';
+import { Button } from '@/components/ui/button';
 import { listProducts } from '@/features/products';
 import { getCurrentStaffContext } from '@/lib/auth';
 import { withTenantContext } from '@/lib/db';
@@ -38,9 +39,17 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <ChevronLeft className="size-4" />
           All clients
         </Link>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
-          <p className="text-muted-foreground text-sm">A client of your 3PL.</p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
+            <p className="text-muted-foreground text-sm">A client of your 3PL.</p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/warehouse/clients/${client.id}/personalization`}>
+              <Sparkles className="size-4" />
+              Personalization
+            </Link>
+          </Button>
         </div>
       </div>
 

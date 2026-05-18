@@ -1,4 +1,4 @@
-import { OrderStatus, Prisma } from '@prisma/client';
+import { AccountStatus, OrderStatus, Prisma } from '@prisma/client';
 import { withTenantContext } from '@/lib/db';
 import { prisma } from '@/lib/db/prisma';
 import type { TenantContext } from '@/lib/tenancy';
@@ -67,6 +67,45 @@ async function insertAndAllocate(
       throw new Error('One or more SKUs do not belong to this client.');
     }
 
+    // Personalization validation (1.7) — load the client's ACTIVE field
+    // definitions and verify every supplied key resolves, every required
+    // field is present, and every value is within length cap. Validation
+    // happens BEFORE we write any order data so failure is atomic.
+    const activeFields = await tx.personalizationField.findMany({
+      where: { clientId: client.id, status: AccountStatus.ACTIVE },
+      select: { id: true, key: true, required: true },
+    });
+    const activeByKey = new Map(activeFields.map((f) => [f.key, f]));
+    const linePersonalization = args.lines.map((line) => {
+      const supplied = line.personalization ?? {};
+      // Reject unknown keys
+      for (const key of Object.keys(supplied)) {
+        if (!activeByKey.has(key)) {
+          throw new Error(`Unknown personalization key: "${key}"`);
+        }
+      }
+      // Require all required fields. Empty string counts as absent.
+      for (const field of activeFields) {
+        if (!field.required) continue;
+        const value = (supplied[field.key] ?? '').trim();
+        if (value.length === 0) {
+          throw new Error(`Personalization field "${field.key}" is required.`);
+        }
+      }
+      // Build the (non-empty) value records to write after lines exist.
+      const toWrite: Array<{ fieldId: string; fieldKey: string; value: string }> = [];
+      for (const [key, rawValue] of Object.entries(supplied)) {
+        const value = (rawValue ?? '').trim();
+        if (value.length === 0) continue;
+        if (value.length > 500) {
+          throw new Error(`Personalization "${key}" exceeds 500 characters.`);
+        }
+        const field = activeByKey.get(key)!;
+        toWrite.push({ fieldId: field.id, fieldKey: field.key, value });
+      }
+      return { skuId: line.skuId, toWrite };
+    });
+
     const created = await tx.order.create({
       data: {
         reference,
@@ -94,6 +133,25 @@ async function insertAndAllocate(
       },
       include: { lines: true },
     });
+
+    // Write personalization values now that line ids exist. Match input
+    // lines to created lines by skuId (uniqueness enforced earlier).
+    const lineBySkuId = new Map(created.lines.map((l) => [l.skuId, l]));
+    for (const lp of linePersonalization) {
+      if (lp.toWrite.length === 0) continue;
+      const line = lineBySkuId.get(lp.skuId);
+      if (!line) continue;
+      await tx.orderLinePersonalization.createMany({
+        data: lp.toWrite.map((v) => ({
+          orderLineItemId: line.id,
+          fieldId: v.fieldId,
+          fieldKey: v.fieldKey,
+          value: v.value,
+          clientId: client.id,
+          companyId: client.companyId,
+        })),
+      });
+    }
 
     const result = await runAllocation(tx, created.id);
 

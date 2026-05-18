@@ -2,18 +2,29 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { getCurrentClientContext } from '@/lib/auth';
 import { withTenantContext } from '@/lib/db';
+import { listActivePersonalizationFields } from '@/features/personalization';
 import { CreateOrderForm } from './_components/create-order-form';
 
 export default async function NewOrderPage() {
   const { tenant } = await getCurrentClientContext();
 
-  // RLS scopes to the caller's own client — only their SKUs surface.
-  const skus = await withTenantContext(tenant, async (tx) =>
-    tx.sKU.findMany({
-      select: { id: true, code: true, name: true },
-      orderBy: { code: 'asc' },
-    }),
-  );
+  // RLS scopes to the caller's own client — only their SKUs + own definitions.
+  const [skus, fields] = await Promise.all([
+    withTenantContext(tenant, async (tx) =>
+      tx.sKU.findMany({
+        select: { id: true, code: true, name: true },
+        orderBy: { code: 'asc' },
+      }),
+    ),
+    listActivePersonalizationFields(tenant),
+  ]);
+
+  const definitions = fields.map((f) => ({
+    id: f.id,
+    key: f.key,
+    label: f.label,
+    required: f.required,
+  }));
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -33,7 +44,7 @@ export default async function NewOrderPage() {
         </div>
       </div>
 
-      <CreateOrderForm skus={skus} />
+      <CreateOrderForm skus={skus} definitions={definitions} />
     </div>
   );
 }

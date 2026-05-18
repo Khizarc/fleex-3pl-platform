@@ -17,6 +17,8 @@ export {
   type CsvHeader,
   type CsvOrderRow,
   type GroupedOrder,
+  type GroupedOrderLine,
+  type PersonalizationDefinition,
   type RowError,
   type SkuLookup,
   type ValidateCaps,

@@ -12,12 +12,17 @@ import { OrderStatus, Role, StockLevelStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import {
   bulkCreateOrders,
+  getOrder,
   listOrders,
   parseCsv,
   validateRows,
   type SkuLookup,
 } from '@/features/orders';
 import { resolveSkusByCode } from '@/features/products';
+import {
+  createPersonalizationField,
+  listActivePersonalizationFields,
+} from '@/features/personalization';
 import { listInventoryBySku } from '@/features/inventory';
 import { assertDatabaseUrl, truncateAll } from './setup';
 
@@ -107,6 +112,13 @@ beforeAll(async () => {
       },
     });
   }
+
+  // Personalization: one optional engraving_text field, exercising the full
+  // bulk-import pipeline including 1.7's CSV column recognition + DB writes.
+  await createPersonalizationField(
+    { companyId: companyA.id, clientId: clientA1.id },
+    { clientId: clientA1.id, key: 'engraving_text', label: 'Engraving' },
+  );
 });
 
 afterAll(async () => {
@@ -120,18 +132,18 @@ describe('end-to-end CSV bulk upload', () => {
     // some valid orders, one with insufficient stock, one with an unknown SKU,
     // one valid multi-line order grouped by reference.
     const csv = [
-      'Order Reference,Ship To Name,Ship To Line1,Ship To Line2,Ship To City,Ship To Region,Ship To Postal Code,Ship To Country,Customer Note,SKU Code,Quantity',
+      'Order Reference,Ship To Name,Ship To Line1,Ship To Line2,Ship To City,Ship To Region,Ship To Postal Code,Ship To Country,Customer Note,SKU Code,Quantity,Personalization Engraving Text',
       // Order 1: simple, plenty of stock — should land READY_TO_PICK
-      'PO-A,Jane Doe,123 Main St,,Brooklyn,NY,11201,us,,E2E-RED,10',
-      // Order 2: multi-line, grouped by PO-B
-      'PO-B,Bob Hill,9 Oak Rd,Suite 4,Austin,TX,73301,US,Leave at door,E2E-RED,5',
-      'PO-B,Bob Hill,9 Oak Rd,Suite 4,Austin,TX,73301,US,Leave at door,E2E-BLUE,2',
+      'PO-A,Jane Doe,123 Main St,,Brooklyn,NY,11201,us,,E2E-RED,10,Happy Birthday',
+      // Order 2: multi-line, grouped by PO-B — first line has engraving, second blank
+      'PO-B,Bob Hill,9 Oak Rd,Suite 4,Austin,TX,73301,US,Leave at door,E2E-RED,5,To Bob',
+      'PO-B,Bob Hill,9 Oak Rd,Suite 4,Austin,TX,73301,US,Leave at door,E2E-BLUE,2,',
       // Order 3: not enough BLUE stock — should land AWAITING_STOCK
-      'PO-C,Carol Lin,1 Pine St,,Seattle,WA,98101,US,,E2E-BLUE,50',
+      'PO-C,Carol Lin,1 Pine St,,Seattle,WA,98101,US,,E2E-BLUE,50,',
       // Order 4: typo'd SKU — should be skipped at validate stage
-      'PO-D,Dan King,2 Birch Ln,,Portland,OR,97201,US,,E2E-PINK,1',
+      'PO-D,Dan King,2 Birch Ln,,Portland,OR,97201,US,,E2E-PINK,1,',
       // Order 5: no GREEN stock at all — should land AWAITING_STOCK
-      'PO-E,Eve Park,5 Elm Ave,,Boston,MA,02108,US,,E2E-GREEN,1',
+      'PO-E,Eve Park,5 Elm Ave,,Boston,MA,02108,US,,E2E-GREEN,1,',
     ].join('\r\n');
 
     // 1) Parse (client-side step, deterministic)
@@ -140,20 +152,30 @@ describe('end-to-end CSV bulk upload', () => {
     expect(parsed.rows).toHaveLength(6);
 
     // 2) Resolve SKUs against the real DB via RLS
-    const codes = Array.from(new Set(parsed.rows.map((r) => r.sku_code)));
+    const codes = Array.from(
+      new Set(parsed.rows.map((r) => r.sku_code).filter((c): c is string => typeof c === 'string')),
+    );
     const portalCtx = { companyId: companyA.id, clientId: clientA1.id };
     const skuMap = await resolveSkusByCode(portalCtx, codes);
     const lookup: SkuLookup = new Map(skuMap);
     expect(lookup.get('E2E-RED')).toBeTruthy();
     expect(lookup.get('E2E-PINK')).toBeNull();
 
-    // 3) Validate + group
-    const { orders, rowErrors } = validateRows(parsed.rows, lookup);
+    // 3) Resolve active personalization definitions (1.7)
+    const definitions = (await listActivePersonalizationFields(portalCtx)).map((f) => ({
+      id: f.id,
+      key: f.key,
+      required: f.required,
+      status: f.status as 'ACTIVE' | 'SUSPENDED' | 'DISABLED',
+    }));
+
+    // 4) Validate + group
+    const { orders, rowErrors } = validateRows(parsed.rows, lookup, definitions);
     expect(orders.map((o) => o.groupKey).sort()).toEqual(['PO-A', 'PO-B', 'PO-C', 'PO-E']);
     expect(rowErrors).toHaveLength(1);
     expect(rowErrors[0]!.message).toMatch(/E2E-PINK/);
 
-    // 4) Commit through bulkCreateOrders (real DB writes via createOrder)
+    // 5) Commit through bulkCreateOrders (real DB writes via createOrder)
     const result = await bulkCreateOrders(portalCtx, {
       clientId: clientA1.id,
       orders,
@@ -197,5 +219,16 @@ describe('end-to-end CSV bulk upload', () => {
     });
     expect(poC!.allocatedAt).toBeNull();
     expect(poC!.lines.flatMap((l) => l.allocations)).toHaveLength(0);
+
+    // 8) Personalization landed: PO-A line should have "Happy Birthday";
+    // PO-B's RED line should have "To Bob"; PO-B's BLUE line empty.
+    const poAId = result.succeeded.find((s) => s.groupKey === 'PO-A')!.orderId;
+    const poBId = result.succeeded.find((s) => s.groupKey === 'PO-B')!.orderId;
+    const poA = await getOrder(portalCtx, poAId);
+    expect(poA.lines[0]!.personalizations[0]!.value).toBe('Happy Birthday');
+    const poB = await getOrder(portalCtx, poBId);
+    const bLineByCode = Object.fromEntries(poB.lines.map((l) => [l.sku.code, l]));
+    expect(bLineByCode['E2E-RED']!.personalizations[0]!.value).toBe('To Bob');
+    expect(bLineByCode['E2E-BLUE']!.personalizations).toHaveLength(0);
   });
 });

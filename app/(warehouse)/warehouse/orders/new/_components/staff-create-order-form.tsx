@@ -39,6 +39,7 @@ type ClientOption = {
   id: string;
   name: string;
   skus: Array<{ id: string; code: string; name: string }>;
+  definitions: Array<{ id: string; key: string; label: string; required: boolean }>;
 };
 
 export function StaffCreateOrderForm({ clients }: { clients: ClientOption[] }) {
@@ -66,10 +67,12 @@ export function StaffCreateOrderForm({ clients }: { clients: ClientOption[] }) {
     name: 'lines',
   });
 
-  const activeSkus = useMemo(
-    () => clients.find((c) => c.id === activeClientId)?.skus ?? [],
+  const activeClient = useMemo(
+    () => clients.find((c) => c.id === activeClientId),
     [clients, activeClientId],
   );
+  const activeSkus = activeClient?.skus ?? [];
+  const activeDefinitions = activeClient?.definitions ?? [];
 
   function onSubmit(values: FormValues) {
     startTransition(async () => {
@@ -268,62 +271,92 @@ export function StaffCreateOrderForm({ clients }: { clients: ClientOption[] }) {
               This client has no SKUs in their catalog yet.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {fields.map((row, i) => (
-                <div key={row.id} className="grid grid-cols-[1fr_120px_auto] items-end gap-2">
-                  <FormField
-                    control={form.control}
-                    name={`lines.${i}.skuId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">SKU</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
+                <div key={row.id} className="space-y-2 rounded-md border p-3">
+                  <div className="grid grid-cols-[1fr_120px_auto] items-end gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`lines.${i}.skuId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">SKU</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Pick a SKU" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {activeSkus.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  <span className="font-mono">{s.code}</span> — {s.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`lines.${i}.quantity`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Quantity</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Pick a SKU" />
-                            </SelectTrigger>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              value={field.value}
+                              onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {activeSkus.map((s) => (
-                              <SelectItem key={s.id} value={s.id}>
-                                <span className="font-mono">{s.code}</span> — {s.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`lines.${i}.quantity`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Quantity</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            value={field.value}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => remove(i)}
-                    disabled={fields.length <= 1}
-                    aria-label="Remove line"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => remove(i)}
+                      disabled={fields.length <= 1}
+                      aria-label="Remove line"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                  {activeDefinitions.length > 0 ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {activeDefinitions.map((def) => (
+                        <FormField
+                          key={def.id}
+                          control={form.control}
+                          name={`lines.${i}.personalization.${def.key}`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">
+                                {def.label}
+                                {def.required ? <span className="text-destructive"> *</span> : null}
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  value={field.value ?? ''}
+                                  maxLength={500}
+                                  placeholder={def.required ? 'Required' : 'Optional'}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

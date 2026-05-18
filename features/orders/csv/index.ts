@@ -3,6 +3,8 @@ export {
   validateRows,
   DEFAULT_CAPS,
   type GroupedOrder,
+  type GroupedOrderLine,
+  type PersonalizationDefinition,
   type RowError,
   type SkuLookup,
   type ValidateCaps,

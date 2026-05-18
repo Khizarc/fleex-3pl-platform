@@ -8,6 +8,7 @@ import {
   Package,
   Settings,
   ShoppingBag,
+  Sparkles,
   Truck,
   Users,
   Warehouse,
@@ -37,6 +38,7 @@ const warehouseNav: SidebarNavItemProps[] = [
 const portalNav: SidebarNavItemProps[] = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/portal' },
   { label: 'Products', icon: Package, href: '/portal/products' },
+  { label: 'Personalization', icon: Sparkles, href: '/portal/personalization' },
   { label: 'Inbound shipments', icon: Truck, href: '/portal/inbound-shipments' },
   { label: 'Inventory', icon: Boxes, href: '/portal/inventory' },
   { label: 'Orders', icon: ShoppingBag, href: '/portal/orders' },

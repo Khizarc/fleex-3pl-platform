@@ -7,7 +7,9 @@ import { StaffCreateOrderForm } from './_components/staff-create-order-form';
 export default async function NewStaffOrderPage() {
   const { tenant } = await getCurrentStaffContext();
 
-  // Staff context — RLS shows all clients and all SKUs in this company.
+  // Staff context — RLS shows all clients, SKUs, and personalization
+  // definitions in this company. Bundle them per-client so the form can
+  // switch dynamically when the staff picks a different client.
   const clientsWithSkus = await withTenantContext(tenant, async (tx) => {
     return tx.client.findMany({
       where: { status: 'ACTIVE' },
@@ -23,6 +25,11 @@ export default async function NewStaffOrderPage() {
             },
           },
         },
+        personalizationFields: {
+          where: { status: 'ACTIVE' },
+          orderBy: [{ sortOrder: 'asc' }, { key: 'asc' }],
+          select: { id: true, key: true, label: true, required: true },
+        },
       },
     });
   });
@@ -31,6 +38,7 @@ export default async function NewStaffOrderPage() {
     id: c.id,
     name: c.name,
     skus: c.products.flatMap((p) => p.skus),
+    definitions: c.personalizationFields,
   }));
 
   return (

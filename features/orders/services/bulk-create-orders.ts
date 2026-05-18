@@ -46,7 +46,11 @@ export async function bulkCreateOrders(
         shipToPostalCode: order.shipTo.postalCode,
         shipToCountry: order.shipTo.country,
         customerNote: order.customerNote,
-        lines: order.lines.map((l) => ({ skuId: l.skuId, quantity: l.quantity })),
+        lines: order.lines.map((l) => ({
+          skuId: l.skuId,
+          quantity: l.quantity,
+          personalization: l.personalization,
+        })),
       });
       succeeded.push({
         groupKey: order.groupKey,

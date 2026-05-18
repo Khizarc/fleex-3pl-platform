@@ -1,12 +1,13 @@
 'use server';
 
-// Staff-side server actions for bulk CSV order import (Milestone 1.6).
+// Staff-side server actions for bulk CSV order import (Milestone 1.6 + 1.7).
 // Same shape as the portal actions but takes an explicit clientId on every
-// call. RLS still confines the staff to their own company.
+// call. RLS still confines staff to their own company.
 
 import { z } from 'zod';
 import { getCurrentStaffContext } from '@/lib/auth';
 import { bulkCreateOrders, type BulkCreateOrdersResult } from '@/features/orders';
+import { listActivePersonalizationFields } from '@/features/personalization';
 import { resolveSkusByCode } from '@/features/products';
 
 const groupedOrderSchema = z.object({
@@ -28,6 +29,7 @@ const groupedOrderSchema = z.object({
         skuId: z.string().min(1),
         skuCode: z.string().min(1),
         quantity: z.number().int().positive(),
+        personalization: z.record(z.string(), z.string().max(500)).optional(),
       }),
     )
     .min(1),
@@ -45,6 +47,29 @@ export async function resolveSkusAction(
   const { tenant } = await getCurrentStaffContext();
   const map = await resolveSkusByCode(tenant, codes, { clientId });
   return Object.fromEntries(map);
+}
+
+export type ResolvedPersonalizationField = {
+  id: string;
+  key: string;
+  label: string;
+  required: boolean;
+  status: 'ACTIVE' | 'SUSPENDED' | 'DISABLED';
+};
+
+export async function resolvePersonalizationFieldsAction(
+  clientId: string,
+): Promise<ResolvedPersonalizationField[]> {
+  if (!clientId) return [];
+  const { tenant } = await getCurrentStaffContext();
+  const fields = await listActivePersonalizationFields(tenant, { clientId });
+  return fields.map((f) => ({
+    id: f.id,
+    key: f.key,
+    label: f.label,
+    required: f.required,
+    status: f.status as 'ACTIVE' | 'SUSPENDED' | 'DISABLED',
+  }));
 }
 
 type ImportResult = { ok: true; data: BulkCreateOrdersResult } | { ok: false; error: string };
@@ -82,6 +107,7 @@ export async function importOrdersAction(
       skuId: skuMap.get(l.skuCode)?.id ?? l.skuId,
       skuCode: l.skuCode,
       quantity: l.quantity,
+      personalization: l.personalization,
     })),
   }));
 

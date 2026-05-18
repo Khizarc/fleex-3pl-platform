@@ -1,8 +1,7 @@
 // Validate + group parsed CSV rows.
 //
-// Pure function — no DB, no I/O. Takes raw rows + a SKU lookup map (the
-// caller resolved SKU codes to {id,name} via the tenant-scoped server
-// action) and produces:
+// Pure function — no DB, no I/O. Takes raw rows + a SKU lookup map + an
+// (optional) personalization-field definitions list and produces:
 //   - `orders`: grouped, validated, ready to feed to bulkCreateOrders
 //   - `rowErrors`: per-row problems with 1-based line numbers
 //
@@ -13,14 +12,35 @@
 // Cross-row consistency: all rows in one group must share identical
 // ship-to fields. Mismatch → the WHOLE group is rejected (with one error
 // pointing at the first divergent row).
+//
+// Personalization columns (1.7): any raw column matching
+// `personalization_<key>` is recognized; suffixes are validated against
+// the supplied `definitions` list. Unknown / DISABLED keys → row error.
+// Missing required values → row error. Empty optional values are dropped
+// (matches createOrder semantics).
 
 import { csvOrderRowSchema, type CsvOrderRow } from './schema';
 
 export type SkuLookup = Map<string, { id: string; name: string } | null>;
 
+export type PersonalizationDefinition = {
+  id: string;
+  key: string;
+  required: boolean;
+  // status drives the disabled-column-warns-instead-of-silently-dropping rule
+  status: 'ACTIVE' | 'SUSPENDED' | 'DISABLED';
+};
+
+export type GroupedOrderLine = {
+  skuId: string;
+  skuCode: string;
+  quantity: number;
+  personalization?: Record<string, string>;
+};
+
 export type GroupedOrder = {
-  groupKey: string; // user-supplied order_reference, or synthetic "__row_N"
-  rowNumbers: number[]; // 1-based line numbers (including header), for UX
+  groupKey: string;
+  rowNumbers: number[];
   shipTo: {
     name: string;
     line1: string;
@@ -31,11 +51,11 @@ export type GroupedOrder = {
     country: string;
   };
   customerNote?: string;
-  lines: { skuId: string; skuCode: string; quantity: number }[];
+  lines: GroupedOrderLine[];
 };
 
 export type RowError = {
-  row: number; // 1-based line number including header
+  row: number;
   groupKey?: string;
   message: string;
 };
@@ -51,9 +71,12 @@ export type ValidateCaps = {
 
 export const DEFAULT_CAPS: ValidateCaps = { maxRows: 1000 };
 
+const PERSONALIZATION_COLUMN_PREFIX = 'personalization_';
+
 export function validateRows(
   rawRows: Record<string, string>[],
   skuLookup: SkuLookup,
+  definitions: PersonalizationDefinition[] = [],
   caps: ValidateCaps = DEFAULT_CAPS,
 ): ValidateResult {
   if (rawRows.length > caps.maxRows) {
@@ -68,7 +91,16 @@ export function validateRows(
     };
   }
 
-  type ParsedRow = { lineNumber: number; data: CsvOrderRow };
+  const defsByKey = new Map(definitions.map((d) => [d.key, d]));
+  const activeRequiredKeys = definitions
+    .filter((d) => d.status === 'ACTIVE' && d.required)
+    .map((d) => d.key);
+
+  type ParsedRow = {
+    lineNumber: number;
+    data: CsvOrderRow;
+    personalization: Record<string, string>;
+  };
   const parsedByGroup = new Map<string, ParsedRow[]>();
   const rowErrors: RowError[] = [];
 
@@ -85,13 +117,55 @@ export function validateRows(
       return;
     }
 
+    // Extract personalization columns from the raw row (the strict zod schema
+    // would have dropped them otherwise).
+    const personalization: Record<string, string> = {};
+    let columnError: string | null = null;
+    for (const [rawKey, rawValue] of Object.entries(rawRow)) {
+      if (!rawKey.startsWith(PERSONALIZATION_COLUMN_PREFIX)) continue;
+      const fieldKey = rawKey.slice(PERSONALIZATION_COLUMN_PREFIX.length);
+      const def = defsByKey.get(fieldKey);
+      if (!def) {
+        columnError = `Unknown personalization column "${rawKey}". Remove it or define the field first.`;
+        break;
+      }
+      if (def.status !== 'ACTIVE') {
+        columnError = `Personalization column "${rawKey}" refers to a disabled field. Remove it.`;
+        break;
+      }
+      const value = (rawValue ?? '').trim();
+      if (value.length === 0) continue; // optional empty → skip
+      if (value.length > 500) {
+        columnError = `Personalization "${rawKey}" exceeds 500 characters.`;
+        break;
+      }
+      personalization[fieldKey] = value;
+    }
+    if (columnError) {
+      rowErrors.push({ row: lineNumber, message: columnError });
+      return;
+    }
+
+    // Required-field check per row (per-line scope, so each row must carry
+    // its own values).
+    const missing = activeRequiredKeys.find(
+      (k) => !personalization[k] || personalization[k]!.trim().length === 0,
+    );
+    if (missing) {
+      rowErrors.push({
+        row: lineNumber,
+        message: `Required personalization "${missing}" is missing.`,
+      });
+      return;
+    }
+
     const data = result.data;
     const groupKey = data.order_reference || `__row_${lineNumber}`;
     const bucket = parsedByGroup.get(groupKey);
     if (bucket) {
-      bucket.push({ lineNumber, data });
+      bucket.push({ lineNumber, data, personalization });
     } else {
-      parsedByGroup.set(groupKey, [{ lineNumber, data }]);
+      parsedByGroup.set(groupKey, [{ lineNumber, data, personalization }]);
     }
   });
 
@@ -100,7 +174,6 @@ export function validateRows(
   for (const [groupKey, group] of parsedByGroup) {
     const first = group[0]!.data;
 
-    // Ship-to consistency check across all rows in the group.
     const inconsistent = group.find((r) => !shipToMatches(r.data, first));
     if (inconsistent) {
       rowErrors.push({
@@ -111,8 +184,6 @@ export function validateRows(
       continue;
     }
 
-    // Per-order SKU uniqueness check (same SKU twice in one group is a user
-    // mistake — should have summed the quantities).
     const seenSkus = new Set<string>();
     let duplicateSku: { lineNumber: number; sku: string } | null = null;
     for (const r of group) {
@@ -131,7 +202,6 @@ export function validateRows(
       continue;
     }
 
-    // SKU resolution check (lookup performed by the caller; we just consume).
     const unresolved = group.find((r) => !skuLookup.get(r.data.sku_code));
     if (unresolved) {
       rowErrors.push({
@@ -157,11 +227,15 @@ export function validateRows(
       customerNote: first.customer_note || undefined,
       lines: group.map((r) => {
         const sku = skuLookup.get(r.data.sku_code)!;
-        return {
+        const line: GroupedOrderLine = {
           skuId: sku!.id,
           skuCode: r.data.sku_code,
           quantity: r.data.quantity,
         };
+        if (Object.keys(r.personalization).length > 0) {
+          line.personalization = r.personalization;
+        }
+        return line;
       }),
     });
   }

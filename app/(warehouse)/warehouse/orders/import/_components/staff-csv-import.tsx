@@ -10,7 +10,11 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { CsvImport } from '@/components/orders/csv-import';
-import { importOrdersAction, resolveSkusAction } from '../actions';
+import {
+  importOrdersAction,
+  resolvePersonalizationFieldsAction,
+  resolveSkusAction,
+} from '../actions';
 
 type ClientOption = { id: string; name: string };
 
@@ -41,6 +45,7 @@ export function StaffCsvImport({ clients }: { clients: ClientOption[] }) {
         <CsvImport
           key={clientId}
           resolveSkus={(codes) => resolveSkusAction(clientId, codes)}
+          resolveFields={() => resolvePersonalizationFieldsAction(clientId)}
           importOrders={(orders) => importOrdersAction(clientId, orders)}
           detailHrefPrefix="/warehouse/orders"
         />

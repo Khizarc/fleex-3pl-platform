@@ -1,8 +1,11 @@
 import { withTenantContext } from '@/lib/db';
 import type { TenantContext } from '@/lib/tenancy';
 
-// Detail view: order + lines + per-bin allocations + SKU info + client name.
-// RLS scopes naturally: portal sees own only; staff sees within their company.
+// Detail view: order + lines + per-bin allocations + SKU info + client name
+// + per-line personalization values (1.7). RLS scopes naturally: portal sees
+// own only; staff sees within their company. Personalization values are
+// ordered by the snapshotted fieldKey so pack/detail display is stable
+// regardless of definition reorders.
 export async function getOrder(ctx: TenantContext, orderId: string) {
   return withTenantContext(ctx, async (tx) => {
     return tx.order.findUniqueOrThrow({
@@ -14,6 +17,14 @@ export async function getOrder(ctx: TenantContext, orderId: string) {
             sku: { select: { id: true, code: true, name: true } },
             allocations: {
               include: { bin: { select: { id: true, label: true } } },
+            },
+            personalizations: {
+              orderBy: { fieldKey: 'asc' },
+              include: {
+                field: {
+                  select: { id: true, key: true, label: true, status: true },
+                },
+              },
             },
           },
         },

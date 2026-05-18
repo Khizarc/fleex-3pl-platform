@@ -27,6 +27,7 @@ import {
   validateRows,
   CSV_HEADERS,
   type GroupedOrder,
+  type PersonalizationDefinition,
   type RowError,
   type SkuLookup,
   type BulkCreateOrdersResult,
@@ -37,6 +38,8 @@ const MAX_FILE_BYTES = 2_000_000;
 export type ResolveSkusFn = (
   codes: string[],
 ) => Promise<Record<string, { id: string; name: string } | null>>;
+
+export type ResolveFieldsFn = () => Promise<PersonalizationDefinition[]>;
 
 export type ImportOrdersFn = (
   orders: GroupedOrder[],
@@ -55,14 +58,16 @@ type Phase =
 
 export function CsvImport({
   resolveSkus,
+  resolveFields,
   importOrders,
   disabled = false,
   detailHrefPrefix,
 }: {
   resolveSkus: ResolveSkusFn;
+  resolveFields?: ResolveFieldsFn;
   importOrders: ImportOrdersFn;
   disabled?: boolean;
-  detailHrefPrefix: string; // e.g. "/portal/orders" or "/warehouse/orders"
+  detailHrefPrefix: string;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const [, startTransition] = useTransition();
@@ -103,10 +108,13 @@ export function CsvImport({
             .filter((c): c is string => typeof c === 'string' && c.length > 0),
         ),
       );
-      const resolved = await resolveSkus(codes);
+      const [resolved, definitions] = await Promise.all([
+        resolveSkus(codes),
+        resolveFields ? resolveFields() : Promise.resolve([] as PersonalizationDefinition[]),
+      ]);
       const skuLookup: SkuLookup = new Map(Object.entries(resolved));
 
-      const validated = validateRows(parsed.rows, skuLookup);
+      const validated = validateRows(parsed.rows, skuLookup, definitions);
       setPhase({ kind: 'preview', orders: validated.orders, errors: validated.rowErrors });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
