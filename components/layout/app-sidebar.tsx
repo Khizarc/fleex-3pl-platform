@@ -30,7 +30,7 @@ const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Warehouses', icon: Building2, href: '/warehouse/warehouses' },
   { label: 'Inbound shipments', icon: Truck, href: '/warehouse/inbound-shipments' },
   { label: 'Inventory', icon: Boxes, href: '/warehouse/inventory' },
-  { label: 'Orders', icon: ShoppingBag, comingIn: '1.5' },
+  { label: 'Orders', icon: ShoppingBag, href: '/warehouse/orders' },
   { label: 'Settings', icon: Settings, comingIn: 'Phase 5' },
 ];
 
@@ -39,7 +39,7 @@ const portalNav: SidebarNavItemProps[] = [
   { label: 'Products', icon: Package, href: '/portal/products' },
   { label: 'Inbound shipments', icon: Truck, href: '/portal/inbound-shipments' },
   { label: 'Inventory', icon: Boxes, href: '/portal/inventory' },
-  { label: 'Orders', icon: ShoppingBag, comingIn: '1.5' },
+  { label: 'Orders', icon: ShoppingBag, href: '/portal/orders' },
   { label: 'Returns', icon: ArchiveRestore, comingIn: 'Phase 5' },
 ];
 

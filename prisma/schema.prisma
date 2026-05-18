@@ -75,6 +75,29 @@ enum StockLevelStatus {
   DAMAGED
 }
 
+/// State machine for Order (Milestone 1.5). The full lifecycle is declared
+/// here so the schema is stable across 1.5–1.10; only the subset of transitions
+/// needed by 1.5 is wired in features/orders/state-machine.ts. Same staged
+/// approach as InboundShipmentStatus.
+enum OrderStatus {
+  DRAFT // reserved for future "save before submit" — not used in 1.5
+  SUBMITTED // entry state from createOrder
+  AWAITING_STOCK // allocation tried but failed — needs more inbound
+  READY_TO_PICK // fully allocated, waiting for pick run
+  PICKING // 1.8
+  PICKED // 1.8
+  PACKING // 1.9
+  PACKED // 1.9
+  READY_TO_SHIP // 1.9
+  SHIPPED // 1.10
+  IN_TRANSIT // 1.10 (carrier webhook)
+  DELIVERED // 1.10 (carrier webhook)
+  CANCELLED // terminal
+  ON_HOLD // staff-controlled hold — future
+  EXCEPTION // future
+  PARTIALLY_SHIPPED // future (split shipments)
+}
+
 // ============================================================================
 // CORE TENANCY ENTITIES
 // ============================================================================
@@ -122,6 +145,7 @@ model User {
 
   // --- Relations (Milestone 1.3+) ---
   receivedInboundLines InboundShipmentLine[] @relation("ReceivedBy")
+  createdOrders        Order[]               @relation("CreatedByStaff")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -153,6 +177,7 @@ model Client {
   clientUsers      ClientUser[]
   products         Product[]
   inboundShipments InboundShipment[]
+  orders           Order[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -183,6 +208,9 @@ model ClientUser {
   companyId String
   clientId  String
   client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // --- Relations (Milestone 1.5+) ---
+  createdOrders Order[] @relation("CreatedByClientUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -273,6 +301,7 @@ model Bin {
   aisle                Aisle                 @relation(fields: [aisleId], references: [id], onDelete: Cascade)
   stockLevels          StockLevel[]
   inboundShipmentLines InboundShipmentLine[]
+  orderLineAllocations OrderLineAllocation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -330,6 +359,7 @@ model SKU {
   product              Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
   stockLevels          StockLevel[]
   inboundShipmentLines InboundShipmentLine[]
+  orderLineItems       OrderLineItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -428,6 +458,115 @@ model StockLevel {
 
   @@unique([skuId, binId, status])
   @@index([skuId])
+  @@index([binId])
+  @@index([clientId])
+  @@index([companyId])
+}
+
+// ============================================================================
+// ORDERS (Milestone 1.5)
+// ============================================================================
+// A client places an order with one or more line items and a single ship-to
+// address. On submit, `allocateOrder` runs FIFO across bins for each line; the
+// transaction is atomic — either every line fully allocates (status flips to
+// READY_TO_PICK and OrderLineAllocation rows are written, StockLevel
+// AVAILABLE → RESERVED) or nothing happens (status flips to AWAITING_STOCK).
+// Two-level tenant-scoped, same RLS pattern as InboundShipment.
+
+/// A request to ship a set of SKUs to one address. Ship-to is stored inline
+/// (no separate Address table in 1.5 — saved address book is Phase 5).
+/// `reference` is `ORD-YYYYMMDD-####` generated server-side at insert; unique
+/// per company.
+model Order {
+  id            String      @id @default(cuid())
+  reference     String
+  status        OrderStatus @default(SUBMITTED)
+  customerNote  String?
+
+  // --- Inline ship-to address ---
+  shipToName       String
+  shipToLine1      String
+  shipToLine2      String?
+  shipToCity       String
+  shipToRegion     String
+  shipToPostalCode String
+  shipToCountry    String
+
+  // --- Lifecycle timestamps (set by service-layer transitions) ---
+  submittedAt   DateTime  @default(now())
+  allocatedAt   DateTime?
+  cancelledAt   DateTime?
+
+  // --- Tenancy ---
+  clientId  String
+  companyId String
+
+  // --- Audit trail — who placed the order ---
+  createdByUserId       String?
+  createdByClientUserId String?
+
+  client            Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdByUser     User?       @relation("CreatedByStaff", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdByClient   ClientUser? @relation("CreatedByClientUser", fields: [createdByClientUserId], references: [id], onDelete: SetNull)
+  lines             OrderLineItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Reference is unique per company so the daily sequence resets cleanly.
+  @@unique([companyId, reference])
+  @@index([clientId])
+  @@index([companyId])
+  @@index([status])
+}
+
+/// One line of an order — a SKU and the ordered quantity.
+/// A SKU can only appear once per order (callers should combine).
+model OrderLineItem {
+  id       String @id @default(cuid())
+  orderId  String
+  skuId    String
+  quantity Int
+
+  // Denormalized from order — required for two-level RLS.
+  clientId  String
+  companyId String
+
+  order       Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sku         SKU                   @relation(fields: [skuId], references: [id], onDelete: Restrict)
+  allocations OrderLineAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orderId, skuId])
+  @@index([orderId])
+  @@index([skuId])
+  @@index([clientId])
+  @@index([companyId])
+}
+
+/// One row per (orderLineItem, bin) the allocator pulled from. Written by
+/// allocateOrder; deleted by cancelOrder (after restoring stock) or by 1.8
+/// pick (when RESERVED converts to picked-out).
+model OrderLineAllocation {
+  id                String @id @default(cuid())
+  orderLineItemId   String
+  binId             String
+  quantityReserved  Int
+
+  // Denormalized from orderLineItem — required for two-level RLS.
+  clientId  String
+  companyId String
+
+  orderLineItem OrderLineItem @relation(fields: [orderLineItemId], references: [id], onDelete: Cascade)
+  bin           Bin           @relation(fields: [binId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orderLineItemId, binId])
+  @@index([orderLineItemId])
   @@index([binId])
   @@index([clientId])
   @@index([companyId])
