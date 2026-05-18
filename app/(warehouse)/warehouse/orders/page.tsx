@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, ShoppingBag } from 'lucide-react';
+import { FileUp, Plus, ShoppingBag } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,12 +27,20 @@ export default async function WarehouseOrdersPage() {
             Outbound orders across all clients in this company.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/warehouse/orders/new">
-            <Plus className="size-4" />
-            New order
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline">
+            <Link href="/warehouse/orders/import">
+              <FileUp className="size-4" />
+              Import CSV
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/warehouse/orders/new">
+              <Plus className="size-4" />
+              New order
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {orders.length === 0 ? (

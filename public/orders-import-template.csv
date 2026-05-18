@@ -1,0 +1,4 @@
+order_reference,ship_to_name,ship_to_line1,ship_to_line2,ship_to_city,ship_to_region,ship_to_postal_code,ship_to_country,customer_note,sku_code,quantity
+PO-1001,Jane Doe,123 Main St,Apt 4B,Brooklyn,NY,11201,US,Please leave with doorman,SKU-EXAMPLE-1,2
+PO-1001,Jane Doe,123 Main St,Apt 4B,Brooklyn,NY,11201,US,Please leave with doorman,SKU-EXAMPLE-2,1
+,John Smith,456 Oak Ave,,Austin,TX,73301,US,,SKU-EXAMPLE-3,5

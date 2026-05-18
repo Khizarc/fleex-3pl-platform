@@ -6,6 +6,23 @@ export { allocateOrder } from './services/allocate-order';
 export { cancelOrder } from './services/cancel-order';
 export { listOrders, type OrderListRow } from './services/list-orders';
 export { getOrder } from './services/get-order';
+export { bulkCreateOrders, type BulkCreateOrdersResult } from './services/bulk-create-orders';
+
+export {
+  parseCsv,
+  validateRows,
+  DEFAULT_CAPS,
+  CSV_HEADERS,
+  csvOrderRowSchema,
+  type CsvHeader,
+  type CsvOrderRow,
+  type GroupedOrder,
+  type RowError,
+  type SkuLookup,
+  type ValidateCaps,
+  type ValidateResult,
+  type ParsedCsv,
+} from './csv';
 
 export { IllegalStateTransitionError } from './state-machine';
 export {
