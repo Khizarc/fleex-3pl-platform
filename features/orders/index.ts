@@ -16,6 +16,10 @@ export {
 export { listPickQueue, type PickQueueRow } from './services/list-pick-queue';
 export { getPickList, type PickListItem } from './services/get-pick-list';
 
+export { packOrder, OrderAlreadyPackedError } from './services/pack-order';
+export { listPackQueue, type PackQueueRow } from './services/list-pack-queue';
+export { inchesToMm, ouncesToGrams, mmToInches, gramsToOunces } from './units';
+
 export {
   parseCsv,
   validateRows,
@@ -41,9 +45,11 @@ export {
   cancelOrderInputSchema,
   orderLineInputSchema,
   pickAllocationInputSchema,
+  packOrderInputSchema,
   type CreateOrderInput,
   type OrderLineInput,
   type AllocateOrderInput,
   type CancelOrderInput,
   type PickAllocationInput,
+  type PackOrderInput,
 } from './validation';

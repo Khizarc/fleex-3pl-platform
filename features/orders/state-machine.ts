@@ -15,7 +15,7 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   AWAITING_STOCK: [OrderStatus.READY_TO_PICK, OrderStatus.CANCELLED],
   READY_TO_PICK: [OrderStatus.CANCELLED, OrderStatus.PICKING],
   PICKING: [OrderStatus.PICKED],
-  PICKED: [],
+  PICKED: [OrderStatus.PACKED],
   PACKING: [],
   PACKED: [],
   READY_TO_SHIP: [],

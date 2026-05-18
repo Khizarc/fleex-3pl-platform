@@ -55,8 +55,33 @@ export const pickAllocationInputSchema = z.object({
   scannedBinLabel: z.string().trim().min(1, 'Type or scan the bin label to confirm').max(120),
 });
 
+// Pack input (Milestone 1.9). Dimensions are millimeters, weight is grams —
+// the canonical units. The pack form converts inches/ounces to these before
+// posting. Sanity caps catch the cm-as-inches footgun without being absurd:
+// 3 m max box edge, 500 kg pallet-class max weight.
+const dimMm = z
+  .number({ message: 'Dimension must be a number' })
+  .int('Dimension must be a whole number of mm')
+  .positive('Dimension must be greater than zero')
+  .max(3_000, 'Dimension exceeds the 3000 mm sanity cap');
+const weightG = z
+  .number({ message: 'Weight must be a number' })
+  .int('Weight must be a whole number of grams')
+  .positive('Weight must be greater than zero')
+  .max(500_000, 'Weight exceeds the 500 kg sanity cap');
+
+export const packOrderInputSchema = z.object({
+  orderId: z.string().min(1, 'Order id is required'),
+  boxLengthMm: dimMm,
+  boxWidthMm: dimMm,
+  boxHeightMm: dimMm,
+  boxWeightG: weightG,
+  packNotes: z.string().trim().max(2000).optional(),
+});
+
 export type OrderLineInput = z.infer<typeof orderLineInputSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
 export type AllocateOrderInput = z.infer<typeof allocateOrderInputSchema>;
 export type CancelOrderInput = z.infer<typeof cancelOrderInputSchema>;
 export type PickAllocationInput = z.infer<typeof pickAllocationInputSchema>;
+export type PackOrderInput = z.infer<typeof packOrderInputSchema>;

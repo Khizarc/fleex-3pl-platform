@@ -147,6 +147,7 @@ model User {
   receivedInboundLines InboundShipmentLine[]   @relation("ReceivedBy")
   createdOrders        Order[]                 @relation("CreatedByStaff")
   picksPerformed       OrderLineAllocation[]   @relation("PickedBy")
+  packsPerformed       Order[]                 @relation("PackedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -495,22 +496,36 @@ model Order {
   shipToCountry    String
 
   // --- Lifecycle timestamps (set by service-layer transitions) ---
-  submittedAt   DateTime  @default(now())
-  allocatedAt   DateTime?
-  cancelledAt   DateTime?
+  submittedAt DateTime  @default(now())
+  allocatedAt DateTime?
+  cancelledAt DateTime?
+  packedAt    DateTime?
+
+  // --- Pack metadata (Milestone 1.9) ---
+  // Single-shipment assumption: when split shipments land, these columns
+  // extract into an `OrderShipment` table and PACKED becomes "all shipments
+  // packed". Storing in mm/g (integers) avoids float drift and matches
+  // EasyPost's preferred units for rate APIs.
+  boxLengthMm Int?
+  boxWidthMm  Int?
+  boxHeightMm Int?
+  boxWeightG  Int?
+  packNotes   String?
 
   // --- Tenancy ---
   clientId  String
   companyId String
 
-  // --- Audit trail — who placed the order ---
+  // --- Audit trail — who placed the order, who packed it ---
   createdByUserId       String?
   createdByClientUserId String?
+  packedByUserId        String?
 
-  client            Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  createdByUser     User?       @relation("CreatedByStaff", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  createdByClient   ClientUser? @relation("CreatedByClientUser", fields: [createdByClientUserId], references: [id], onDelete: SetNull)
-  lines             OrderLineItem[]
+  client          Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdByUser   User?           @relation("CreatedByStaff", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdByClient ClientUser?     @relation("CreatedByClientUser", fields: [createdByClientUserId], references: [id], onDelete: SetNull)
+  packedByUser    User?           @relation("PackedBy", fields: [packedByUserId], references: [id], onDelete: SetNull)
+  lines           OrderLineItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -520,6 +535,7 @@ model Order {
   @@index([clientId])
   @@index([companyId])
   @@index([status])
+  @@index([packedByUserId])
 }
 
 /// One line of an order — a SKU and the ordered quantity.

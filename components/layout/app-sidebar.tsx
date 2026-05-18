@@ -34,6 +34,7 @@ const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Inventory', icon: Boxes, href: '/warehouse/inventory' },
   { label: 'Orders', icon: ShoppingBag, href: '/warehouse/orders' },
   { label: 'Pick', icon: ClipboardCheck, href: '/warehouse/pick' },
+  { label: 'Pack', icon: Package, href: '/warehouse/pack' },
   { label: 'Settings', icon: Settings, comingIn: 'Phase 5' },
 ];
 
