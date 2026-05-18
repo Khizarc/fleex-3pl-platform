@@ -25,5 +25,9 @@ export default defineConfig({
     // Integration tests share one DB; run them serially to avoid cross-test
     // truncate races. Unit tests later can parallelize via vitest projects.
     fileParallelism: false,
+    // Integration tests round-trip to Neon (us-east-1). Multi-step workflows
+    // (state-machine + StockLevel upsert + completion) chain several
+    // transactions; the default 5s timeout is too tight at network latency.
+    testTimeout: 15_000,
   },
 });
