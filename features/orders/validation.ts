@@ -2,6 +2,7 @@
 // (defense in depth — server re-validates). Avoid .transform() so the schema
 // stays compatible with react-hook-form's zodResolver (same constraint as 1.3).
 
+import { Carrier } from '@prisma/client';
 import { z } from 'zod';
 
 const positiveInt = z
@@ -79,9 +80,33 @@ export const packOrderInputSchema = z.object({
   packNotes: z.string().trim().max(2000).optional(),
 });
 
+// Ship input (Milestone 1.10). Manual label entry: carrier dropdown +
+// tracking number + optional ship notes. `carrierOther` is required only
+// when `carrier === OTHER` (the long-tail escape hatch).
+export const shipOrderInputSchema = z
+  .object({
+    orderId: z.string().min(1, 'Order id is required'),
+    carrier: z.nativeEnum(Carrier),
+    carrierOther: z.string().trim().max(60).optional(),
+    trackingNumber: z
+      .string()
+      .trim()
+      .min(1, 'Tracking number is required')
+      .max(120, 'Tracking number is too long'),
+    shipNotes: z.string().trim().max(2000).optional(),
+  })
+  .refine(
+    (d) => d.carrier !== Carrier.OTHER || (d.carrierOther && d.carrierOther.trim().length > 0),
+    {
+      message: 'Specify the carrier name when "Other" is selected',
+      path: ['carrierOther'],
+    },
+  );
+
 export type OrderLineInput = z.infer<typeof orderLineInputSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
 export type AllocateOrderInput = z.infer<typeof allocateOrderInputSchema>;
 export type CancelOrderInput = z.infer<typeof cancelOrderInputSchema>;
 export type PickAllocationInput = z.infer<typeof pickAllocationInputSchema>;
 export type PackOrderInput = z.infer<typeof packOrderInputSchema>;
+export type ShipOrderInput = z.infer<typeof shipOrderInputSchema>;

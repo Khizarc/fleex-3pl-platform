@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   LayoutDashboard,
   Package,
+  Send,
   Settings,
   ShoppingBag,
   Sparkles,
@@ -35,6 +36,7 @@ const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Orders', icon: ShoppingBag, href: '/warehouse/orders' },
   { label: 'Pick', icon: ClipboardCheck, href: '/warehouse/pick' },
   { label: 'Pack', icon: Package, href: '/warehouse/pack' },
+  { label: 'Ship', icon: Send, href: '/warehouse/ship' },
   { label: 'Settings', icon: Settings, comingIn: 'Phase 5' },
 ];
 

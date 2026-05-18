@@ -20,6 +20,9 @@ export { packOrder, OrderAlreadyPackedError } from './services/pack-order';
 export { listPackQueue, type PackQueueRow } from './services/list-pack-queue';
 export { inchesToMm, ouncesToGrams, mmToInches, gramsToOunces } from './units';
 
+export { shipOrder, OrderAlreadyShippedError } from './services/ship-order';
+export { listShipQueue, type ShipQueueRow } from './services/list-ship-queue';
+
 export {
   parseCsv,
   validateRows,
@@ -46,10 +49,12 @@ export {
   orderLineInputSchema,
   pickAllocationInputSchema,
   packOrderInputSchema,
+  shipOrderInputSchema,
   type CreateOrderInput,
   type OrderLineInput,
   type AllocateOrderInput,
   type CancelOrderInput,
   type PickAllocationInput,
   type PackOrderInput,
+  type ShipOrderInput,
 } from './validation';

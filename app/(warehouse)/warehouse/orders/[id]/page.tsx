@@ -13,6 +13,7 @@ import {
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
 import { getOrder } from '@/features/orders';
 import { getCurrentStaffContext } from '@/lib/auth';
+import { carrierDisplayName, carrierTrackingUrl } from '@/lib/carriers';
 import { OrderActions } from './_components/order-actions';
 
 export default async function WarehouseOrderDetailPage({
@@ -76,6 +77,34 @@ export default async function WarehouseOrderDetailPage({
           </p>
         ) : null}
       </section>
+
+      {order.status === OrderStatus.SHIPPED && order.carrier && order.trackingNumber ? (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Shipment</h2>
+          <div className="bg-muted/30 text-muted-foreground rounded-md border p-3 text-sm">
+            <div>
+              <span className="text-foreground font-medium">
+                {carrierDisplayName(order.carrier, order.carrierOther)}
+              </span>
+              {' · '}
+              {carrierTrackingUrl[order.carrier] ? (
+                <a
+                  href={carrierTrackingUrl[order.carrier]!(order.trackingNumber)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground font-mono underline-offset-4 hover:underline"
+                >
+                  {order.trackingNumber}
+                </a>
+              ) : (
+                <span className="text-foreground font-mono">{order.trackingNumber}</span>
+              )}
+            </div>
+            {order.shippedAt ? <div>Shipped {order.shippedAt.toLocaleDateString()}</div> : null}
+            {order.shipNotes ? <div className="mt-1 text-xs italic">{order.shipNotes}</div> : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Lines</h2>

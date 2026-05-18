@@ -16,8 +16,11 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   READY_TO_PICK: [OrderStatus.CANCELLED, OrderStatus.PICKING],
   PICKING: [OrderStatus.PICKED],
   PICKED: [OrderStatus.PACKED],
+  // PACKED → SHIPPED is the only ship transition wired in 1.10 (manual
+  // label entry). READY_TO_SHIP / IN_TRANSIT / DELIVERED stay terminal `[]`
+  // pending Phase 3 (EasyPost rate quotes + carrier webhooks).
   PACKING: [],
-  PACKED: [],
+  PACKED: [OrderStatus.SHIPPED],
   READY_TO_SHIP: [],
   SHIPPED: [],
   IN_TRANSIT: [],

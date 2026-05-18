@@ -98,6 +98,18 @@ enum OrderStatus {
   PARTIALLY_SHIPPED // future (split shipments)
 }
 
+/// Carriers supported at ship time (Milestone 1.10). Manual label entry: staff
+/// picks the carrier and enters the tracking number. EasyPost-driven carrier
+/// purchasing and webhook-driven IN_TRANSIT/DELIVERED updates are Phase 3.
+/// "OTHER" is the long-tail escape hatch with `Order.carrierOther` text.
+enum Carrier {
+  USPS
+  UPS
+  FEDEX
+  DHL
+  OTHER
+}
+
 // ============================================================================
 // CORE TENANCY ENTITIES
 // ============================================================================
@@ -148,6 +160,7 @@ model User {
   createdOrders        Order[]                 @relation("CreatedByStaff")
   picksPerformed       OrderLineAllocation[]   @relation("PickedBy")
   packsPerformed       Order[]                 @relation("PackedBy")
+  shipsPerformed       Order[]                 @relation("ShippedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -500,6 +513,7 @@ model Order {
   allocatedAt DateTime?
   cancelledAt DateTime?
   packedAt    DateTime?
+  shippedAt   DateTime?
 
   // --- Pack metadata (Milestone 1.9) ---
   // Single-shipment assumption: when split shipments land, these columns
@@ -512,19 +526,32 @@ model Order {
   boxWeightG  Int?
   packNotes   String?
 
+  // --- Ship metadata (Milestone 1.10) ---
+  // Manual label entry only in 1.10. Phase 3 adds EasyPost: `carrierAccountId`
+  // (per-client carrier account), `purchasedLabelUrl` (Vercel Blob), and
+  // `shippingCostCents` (Phase 2 billing ledger writes the BillableEvent).
+  // `carrierOther` is set only when `carrier == OTHER`; the service nulls it
+  // otherwise so the column stays a clean invariant.
+  carrier        Carrier?
+  carrierOther   String?
+  trackingNumber String?
+  shipNotes      String?
+
   // --- Tenancy ---
   clientId  String
   companyId String
 
-  // --- Audit trail — who placed the order, who packed it ---
+  // --- Audit trail — who placed / packed / shipped the order ---
   createdByUserId       String?
   createdByClientUserId String?
   packedByUserId        String?
+  shippedByUserId       String?
 
   client          Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
   createdByUser   User?           @relation("CreatedByStaff", fields: [createdByUserId], references: [id], onDelete: SetNull)
   createdByClient ClientUser?     @relation("CreatedByClientUser", fields: [createdByClientUserId], references: [id], onDelete: SetNull)
   packedByUser    User?           @relation("PackedBy", fields: [packedByUserId], references: [id], onDelete: SetNull)
+  shippedByUser   User?           @relation("ShippedBy", fields: [shippedByUserId], references: [id], onDelete: SetNull)
   lines           OrderLineItem[]
 
   createdAt DateTime @default(now())
@@ -536,6 +563,7 @@ model Order {
   @@index([companyId])
   @@index([status])
   @@index([packedByUserId])
+  @@index([shippedByUserId])
 }
 
 /// One line of an order — a SKU and the ordered quantity.
