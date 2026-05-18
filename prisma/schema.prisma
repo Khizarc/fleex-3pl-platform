@@ -75,8 +75,9 @@ model Company {
   primaryColor String? // Hex color for portal theming
 
   // --- Relations ---
-  users   User[]
-  clients Client[]
+  users      User[]
+  clients    Client[]
+  warehouses Warehouse[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -167,6 +168,91 @@ model ClientUser {
   @@index([clientId])
   @@index([companyId])
   @@index([authProviderId])
+}
+
+// ============================================================================
+// WAREHOUSE STRUCTURE (Milestone 1.1)
+// ============================================================================
+// Four-level nesting: Warehouse → Zone → Aisle → Bin. Each level carries
+// `companyId` (denormalized from the parent) so RLS policies filter without
+// joining. The service layer derives child `companyId` from the parent —
+// always — and RLS WITH CHECK provides defense-in-depth at the DB level.
+
+/// A physical warehouse location belonging to a Company.
+model Warehouse {
+  id      String        @id @default(cuid())
+  name    String
+  address String?
+  status  AccountStatus @default(ACTIVE)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  zones Zone[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+/// A logical area inside a Warehouse (e.g., "Receiving", "Shipping", "Cold").
+model Zone {
+  id   String @id @default(cuid())
+  name String
+
+  warehouseId String
+  // Denormalized from warehouse.companyId — must always match.
+  companyId   String
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  aisles    Aisle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([warehouseId, name])
+  @@index([companyId])
+  @@index([warehouseId])
+}
+
+/// A row of bins within a Zone (e.g., "A1", "B2").
+model Aisle {
+  id   String @id @default(cuid())
+  name String
+
+  zoneId    String
+  companyId String // denormalized from zone.companyId
+
+  zone Zone  @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  bins Bin[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([zoneId, name])
+  @@index([companyId])
+  @@index([zoneId])
+}
+
+/// A single storage location (e.g., "A1-01"). Inventory lives in bins (Phase 1.3+).
+model Bin {
+  id     String        @id @default(cuid())
+  label  String
+  status AccountStatus @default(ACTIVE)
+
+  aisleId   String
+  companyId String // denormalized from aisle.companyId
+
+  aisle Aisle @relation(fields: [aisleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([aisleId, label])
+  @@index([companyId])
+  @@index([aisleId])
 }
 
 // ============================================================================

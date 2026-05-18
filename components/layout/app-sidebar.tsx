@@ -3,6 +3,7 @@
 import {
   ArchiveRestore,
   Boxes,
+  Building2,
   LayoutDashboard,
   Settings,
   ShoppingBag,
@@ -24,9 +25,10 @@ export type ShellVariant = 'warehouse' | 'portal';
 const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/warehouse' },
   { label: 'Clients', icon: Users, href: '/warehouse/clients' },
-  { label: 'Inventory', icon: Boxes, comingIn: 'Phase 1' },
-  { label: 'Orders', icon: ShoppingBag, comingIn: 'Phase 1' },
-  { label: 'Settings', icon: Settings, comingIn: 'Phase 1' },
+  { label: 'Warehouses', icon: Building2, href: '/warehouse/warehouses' },
+  { label: 'Inventory', icon: Boxes, comingIn: '1.4' },
+  { label: 'Orders', icon: ShoppingBag, comingIn: '1.5' },
+  { label: 'Settings', icon: Settings, comingIn: 'Phase 5' },
 ];
 
 const portalNav: SidebarNavItemProps[] = [
