@@ -40,6 +40,7 @@ export default async function PackQueuePage() {
                 <TableHead>Reference</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Assignee</TableHead>
                 <TableHead>Lines</TableHead>
                 <TableHead>Total qty</TableHead>
                 <TableHead>Ship to</TableHead>
@@ -60,6 +61,9 @@ export default async function PackQueuePage() {
                   <TableCell className="text-muted-foreground text-sm">{row.clientName}</TableCell>
                   <TableCell>
                     <OrderStatusBadge status={row.status} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {row.assigneeName ?? '—'}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{row.lineCount}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">

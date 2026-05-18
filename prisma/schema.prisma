@@ -144,8 +144,13 @@ model Company {
 /// application-side identity, role, and tenant linkage. `authProviderId`
 /// links this row to the Clerk user.
 model User {
-  id             String        @id @default(cuid())
-  authProviderId String        @unique // Clerk user ID
+  id String @id @default(cuid())
+  /// Clerk user ID. NULL until an invited staff member signs up and the
+  /// auth resolver (lib/auth/current-user.ts) claims this row by email.
+  /// Mirror of the ClientUser pattern from Milestone 0.5. PostgreSQL treats
+  /// multiple NULLs as distinct, so @unique still permits multiple unclaimed
+  /// staff invites company-wide.
+  authProviderId String?       @unique
   email          String
   name           String
   role           Role
@@ -156,11 +161,12 @@ model User {
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // --- Relations (Milestone 1.3+) ---
-  receivedInboundLines InboundShipmentLine[]   @relation("ReceivedBy")
-  createdOrders        Order[]                 @relation("CreatedByStaff")
-  picksPerformed       OrderLineAllocation[]   @relation("PickedBy")
-  packsPerformed       Order[]                 @relation("PackedBy")
-  shipsPerformed       Order[]                 @relation("ShippedBy")
+  receivedInboundLines InboundShipmentLine[] @relation("ReceivedBy")
+  createdOrders        Order[]               @relation("CreatedByStaff")
+  picksPerformed       OrderLineAllocation[] @relation("PickedBy")
+  packsPerformed       Order[]               @relation("PackedBy")
+  shipsPerformed       Order[]               @relation("ShippedBy")
+  assignedOrders       Order[]               @relation("AssignedTo")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -547,12 +553,20 @@ model Order {
   packedByUserId        String?
   shippedByUserId       String?
 
-  client          Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  createdByUser   User?           @relation("CreatedByStaff", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  createdByClient ClientUser?     @relation("CreatedByClientUser", fields: [createdByClientUserId], references: [id], onDelete: SetNull)
-  packedByUser    User?           @relation("PackedBy", fields: [packedByUserId], references: [id], onDelete: SetNull)
-  shippedByUser   User?           @relation("ShippedBy", fields: [shippedByUserId], references: [id], onDelete: SetNull)
-  lines           OrderLineItem[]
+  // --- Assignment (Milestone 1.11) ---
+  // ADMIN can assign an order to a specific staff member as a hint to
+  // workers. Assignment is NOT an access fence — the role gates on
+  // pick/pack/ship are the access-control surface. Reset on assignee
+  // deletion (SetNull) so a deleted user's orders just become unassigned.
+  assignedToUserId String?
+
+  client           Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdByUser    User?           @relation("CreatedByStaff", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdByClient  ClientUser?     @relation("CreatedByClientUser", fields: [createdByClientUserId], references: [id], onDelete: SetNull)
+  packedByUser     User?           @relation("PackedBy", fields: [packedByUserId], references: [id], onDelete: SetNull)
+  shippedByUser    User?           @relation("ShippedBy", fields: [shippedByUserId], references: [id], onDelete: SetNull)
+  assignedToUser   User?           @relation("AssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  lines            OrderLineItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -564,6 +578,7 @@ model Order {
   @@index([status])
   @@index([packedByUserId])
   @@index([shippedByUserId])
+  @@index([assignedToUserId])
 }
 
 /// One line of an order — a SKU and the ordered quantity.

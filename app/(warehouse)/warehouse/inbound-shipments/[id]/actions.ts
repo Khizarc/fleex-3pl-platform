@@ -1,9 +1,13 @@
 'use server';
 
 // Staff server actions for the receive workflow. Each one resolves the
-// staff context, calls the service, and revalidates the detail page.
+// staff context, asserts role + status, calls the service, and revalidates
+// the detail page.
+//
+// Role gate (Milestone 1.11): ADMIN | RECEIVER. Suspended users blocked.
 
 import { revalidatePath } from 'next/cache';
+import { AccountStatus, Role } from '@prisma/client';
 import { getCurrentStaffContext } from '@/lib/auth';
 import {
   IllegalStateTransitionError,
@@ -31,8 +35,20 @@ function friendly(err: unknown): string {
   return 'Something went wrong. Please try again.';
 }
 
+function checkRole(user: { role: Role; status: AccountStatus }): Result | null {
+  if (user.status !== AccountStatus.ACTIVE) {
+    return { ok: false, error: 'Your account is not active.' };
+  }
+  if (user.role !== Role.ADMIN && user.role !== Role.RECEIVER) {
+    return { ok: false, error: 'You do not have permission to receive inbound.' };
+  }
+  return null;
+}
+
 export async function startReceivingAction(shipmentId: string): Promise<Result> {
-  const { tenant } = await getCurrentStaffContext();
+  const { tenant, user } = await getCurrentStaffContext();
+  const denied = checkRole(user);
+  if (denied) return denied;
   try {
     await startReceiving(tenant, shipmentId);
     revalidatePath(`/warehouse/inbound-shipments/${shipmentId}`);
@@ -48,6 +64,8 @@ export async function receiveLineAction(input: ReceiveLineInput): Promise<Result
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' };
   }
   const { tenant, user } = await getCurrentStaffContext();
+  const denied = checkRole(user);
+  if (denied) return denied;
   try {
     const line = await receiveLine(tenant, { ...parsed.data, receivedByUserId: user.id });
     revalidatePath(`/warehouse/inbound-shipments/${line.inboundShipmentId}`);
@@ -58,7 +76,9 @@ export async function receiveLineAction(input: ReceiveLineInput): Promise<Result
 }
 
 export async function completeAction(shipmentId: string): Promise<Result> {
-  const { tenant } = await getCurrentStaffContext();
+  const { tenant, user } = await getCurrentStaffContext();
+  const denied = checkRole(user);
+  if (denied) return denied;
   try {
     await completeInboundShipment(tenant, shipmentId);
     revalidatePath(`/warehouse/inbound-shipments/${shipmentId}`);

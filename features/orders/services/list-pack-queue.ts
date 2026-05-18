@@ -16,6 +16,8 @@ export type PackQueueRow = {
   totalQuantity: number;
   shipToCity: string;
   shipToRegion: string;
+  assigneeId: string | null;
+  assigneeName: string | null;
 };
 
 export async function listPackQueue(ctx: TenantContext): Promise<PackQueueRow[]> {
@@ -25,6 +27,7 @@ export async function listPackQueue(ctx: TenantContext): Promise<PackQueueRow[]>
       orderBy: { submittedAt: 'asc' },
       include: {
         client: { select: { id: true, name: true } },
+        assignedToUser: { select: { id: true, name: true } },
         lines: { select: { quantity: true } },
       },
     });
@@ -40,6 +43,8 @@ export async function listPackQueue(ctx: TenantContext): Promise<PackQueueRow[]>
       totalQuantity: o.lines.reduce((acc, l) => acc + l.quantity, 0),
       shipToCity: o.shipToCity,
       shipToRegion: o.shipToRegion,
+      assigneeId: o.assignedToUser?.id ?? null,
+      assigneeName: o.assignedToUser?.name ?? null,
     }));
   });
 }

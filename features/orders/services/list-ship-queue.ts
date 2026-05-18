@@ -17,6 +17,8 @@ export type ShipQueueRow = {
   totalQuantity: number;
   shipToCity: string;
   shipToRegion: string;
+  assigneeId: string | null;
+  assigneeName: string | null;
 };
 
 export async function listShipQueue(ctx: TenantContext): Promise<ShipQueueRow[]> {
@@ -26,6 +28,7 @@ export async function listShipQueue(ctx: TenantContext): Promise<ShipQueueRow[]>
       orderBy: { submittedAt: 'asc' },
       include: {
         client: { select: { id: true, name: true } },
+        assignedToUser: { select: { id: true, name: true } },
         lines: { select: { quantity: true } },
       },
     });
@@ -42,6 +45,8 @@ export async function listShipQueue(ctx: TenantContext): Promise<ShipQueueRow[]>
       totalQuantity: o.lines.reduce((acc, l) => acc + l.quantity, 0),
       shipToCity: o.shipToCity,
       shipToRegion: o.shipToRegion,
+      assigneeId: o.assignedToUser?.id ?? null,
+      assigneeName: o.assignedToUser?.name ?? null,
     }));
   });
 }

@@ -12,6 +12,9 @@ export async function getOrder(ctx: TenantContext, orderId: string) {
       where: { id: orderId },
       include: {
         client: { select: { id: true, name: true } },
+        assignedToUser: {
+          select: { id: true, name: true, role: true, status: true },
+        },
         lines: {
           include: {
             sku: { select: { id: true, code: true, name: true } },

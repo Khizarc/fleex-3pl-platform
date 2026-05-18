@@ -12,6 +12,7 @@ import {
   ShoppingBag,
   Sparkles,
   Truck,
+  UserCog,
   Users,
   Warehouse,
 } from 'lucide-react';
@@ -37,6 +38,7 @@ const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Pick', icon: ClipboardCheck, href: '/warehouse/pick' },
   { label: 'Pack', icon: Package, href: '/warehouse/pack' },
   { label: 'Ship', icon: Send, href: '/warehouse/ship' },
+  { label: 'Team', icon: UserCog, href: '/warehouse/team' },
   { label: 'Settings', icon: Settings, comingIn: 'Phase 5' },
 ];
 

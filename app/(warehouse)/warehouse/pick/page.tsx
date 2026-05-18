@@ -42,6 +42,7 @@ export default async function PickQueuePage() {
                 <TableHead>Client</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Progress</TableHead>
+                <TableHead>Assignee</TableHead>
                 <TableHead>Lines</TableHead>
                 <TableHead>Total qty</TableHead>
                 <TableHead>Ship to</TableHead>
@@ -67,6 +68,9 @@ export default async function PickQueuePage() {
                     <Badge variant="outline">
                       {row.pickedAllocations} / {row.totalAllocations}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {row.assigneeName ?? '—'}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{row.lineCount}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">

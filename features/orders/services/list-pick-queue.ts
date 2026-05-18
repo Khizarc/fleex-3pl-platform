@@ -22,6 +22,8 @@ export type PickQueueRow = {
   pickedAllocations: number;
   shipToCity: string;
   shipToRegion: string;
+  assigneeId: string | null;
+  assigneeName: string | null;
 };
 
 export async function listPickQueue(
@@ -34,6 +36,7 @@ export async function listPickQueue(
       orderBy: { submittedAt: 'asc' },
       include: {
         client: { select: { id: true, name: true } },
+        assignedToUser: { select: { id: true, name: true } },
         lines: {
           select: {
             quantity: true,
@@ -58,6 +61,8 @@ export async function listPickQueue(
         pickedAllocations: allocations.filter((a) => a.pickedAt !== null).length,
         shipToCity: o.shipToCity,
         shipToRegion: o.shipToRegion,
+        assigneeId: o.assignedToUser?.id ?? null,
+        assigneeName: o.assignedToUser?.name ?? null,
       };
     });
   });

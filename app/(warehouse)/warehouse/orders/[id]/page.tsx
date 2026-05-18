@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { OrderStatus } from '@prisma/client';
+import { AccountStatus, OrderStatus, Role } from '@prisma/client';
 import {
   Table,
   TableBody,
@@ -12,8 +12,10 @@ import {
 } from '@/components/ui/table';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
 import { getOrder } from '@/features/orders';
+import { listStaff } from '@/features/team';
 import { getCurrentStaffContext } from '@/lib/auth';
 import { carrierDisplayName, carrierTrackingUrl } from '@/lib/carriers';
+import { AssigneePicker } from './_components/assignee-picker';
 import { OrderActions } from './_components/order-actions';
 
 export default async function WarehouseOrderDetailPage({
@@ -22,7 +24,7 @@ export default async function WarehouseOrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { tenant } = await getCurrentStaffContext();
+  const { tenant, user } = await getCurrentStaffContext();
   const order = await getOrder(tenant, id).catch(() => null);
   if (!order) notFound();
 
@@ -32,6 +34,19 @@ export default async function WarehouseOrderDetailPage({
     order.status === OrderStatus.SUBMITTED ||
     order.status === OrderStatus.AWAITING_STOCK ||
     order.status === OrderStatus.READY_TO_PICK;
+
+  const TERMINAL_ASSIGN_STATUSES: OrderStatus[] = [
+    OrderStatus.SHIPPED,
+    OrderStatus.IN_TRANSIT,
+    OrderStatus.DELIVERED,
+    OrderStatus.CANCELLED,
+  ];
+  const canAssign = user.role === Role.ADMIN && !TERMINAL_ASSIGN_STATUSES.includes(order.status);
+  const activeStaff = canAssign
+    ? (await listStaff(tenant)).filter((s) => s.status === AccountStatus.ACTIVE)
+    : [];
+  const assigneeStatusNotActive =
+    order.assignedToUser && order.assignedToUser.status !== AccountStatus.ACTIVE;
 
   return (
     <div className="space-y-8">
@@ -75,6 +90,38 @@ export default async function WarehouseOrderDetailPage({
           <p className="bg-muted/30 text-muted-foreground rounded-md border p-3 text-sm">
             {order.customerNote}
           </p>
+        ) : null}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Assignee</h2>
+        {canAssign ? (
+          <AssigneePicker
+            orderId={order.id}
+            currentAssigneeId={order.assignedToUser?.id ?? null}
+            options={activeStaff.map((s) => ({
+              id: s.id,
+              name: s.name,
+              role: s.role,
+            }))}
+          />
+        ) : (
+          <div className="bg-muted/30 text-muted-foreground rounded-md border p-3 text-sm">
+            {order.assignedToUser ? (
+              <>
+                <span className="text-foreground font-medium">{order.assignedToUser.name}</span>{' '}
+                <span className="text-muted-foreground">· {order.assignedToUser.role}</span>
+              </>
+            ) : (
+              'Unassigned'
+            )}
+          </div>
+        )}
+        {assigneeStatusNotActive ? (
+          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-700 dark:bg-amber-950">
+            ⚠ Assignee&apos;s account is {order.assignedToUser!.status}. Reassign to keep work
+            moving.
+          </div>
         ) : null}
       </section>
 
