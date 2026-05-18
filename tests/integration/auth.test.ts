@@ -192,7 +192,95 @@ describe('getCurrentClientContext', () => {
 
   it('redirects an unprovisioned signed-in user to /access-pending', async () => {
     mockSignedIn('clerk_unprovisioned_1');
+    // No matching unclaimed invite either
+    mockClerkUser('truly-unprovisioned@example.test');
 
     await expect(getCurrentClientContext()).rejects.toThrow(/NEXT_REDIRECT: \/access-pending/);
+  });
+});
+
+describe('claim-by-email (Milestone 0.5)', () => {
+  it('claims an unclaimed ClientUser by email and returns client context', async () => {
+    const company = await prisma.company.create({ data: { name: 'Invite Co.' } });
+    const client = await prisma.client.create({
+      data: { name: 'Invite Client', companyId: company.id },
+    });
+    const unclaimed = await prisma.clientUser.create({
+      data: {
+        authProviderId: null,
+        email: 'invitee@invite.test',
+        name: 'Invited Person',
+        companyId: company.id,
+        clientId: client.id,
+      },
+    });
+
+    mockSignedIn('clerk_new_invitee_1');
+    mockClerkUser('invitee@invite.test');
+
+    const ctx = await getCurrentClientContext();
+    expect(ctx.clientUser.id).toBe(unclaimed.id);
+    expect(ctx.tenant).toEqual({ companyId: company.id, clientId: client.id });
+
+    // Row is now claimed
+    const after = await prisma.clientUser.findUnique({ where: { id: unclaimed.id } });
+    expect(after?.authProviderId).toBe('clerk_new_invitee_1');
+  });
+
+  it('is idempotent — a second call returns the same context and does not double-claim', async () => {
+    const company = await prisma.company.create({ data: { name: 'Idem Co.' } });
+    const client = await prisma.client.create({
+      data: { name: 'Idem Client', companyId: company.id },
+    });
+    await prisma.clientUser.create({
+      data: {
+        authProviderId: null,
+        email: 'idem@idem.test',
+        name: 'Idem Person',
+        companyId: company.id,
+        clientId: client.id,
+      },
+    });
+
+    mockSignedIn('clerk_idem_1');
+    mockClerkUser('idem@idem.test');
+
+    const first = await getCurrentClientContext();
+    const second = await getCurrentClientContext();
+    expect(second.clientUser.id).toBe(first.clientUser.id);
+
+    const rows = await prisma.clientUser.findMany({
+      where: { authProviderId: 'clerk_idem_1' },
+    });
+    expect(rows.length).toBe(1);
+  });
+
+  it('redirects a signup with an unclaimed ClientUser email to /portal from /warehouse', async () => {
+    // An admin invited this email; now they're signing in. They should NOT be
+    // auto-provisioned as a Company admin — they should land in the portal.
+    const company = await prisma.company.create({ data: { name: 'Invite Redir Co.' } });
+    const client = await prisma.client.create({
+      data: { name: 'Invite Redir Client', companyId: company.id },
+    });
+    await prisma.clientUser.create({
+      data: {
+        authProviderId: null,
+        email: 'redir-invitee@redir.test',
+        name: 'Redir Invitee',
+        companyId: company.id,
+        clientId: client.id,
+      },
+    });
+
+    mockSignedIn('clerk_redir_invitee_1');
+    mockClerkUser('redir-invitee@redir.test');
+
+    await expect(getCurrentStaffContext()).rejects.toThrow(/NEXT_REDIRECT: \/portal/);
+
+    // Confirm we did NOT auto-provision them as a Company admin.
+    const staffRow = await prisma.user.findUnique({
+      where: { authProviderId: 'clerk_redir_invitee_1' },
+    });
+    expect(staffRow).toBeNull();
   });
 });

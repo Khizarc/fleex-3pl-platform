@@ -23,7 +23,7 @@ export type ShellVariant = 'warehouse' | 'portal';
 
 const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/warehouse' },
-  { label: 'Clients', icon: Users, comingIn: '0.5' },
+  { label: 'Clients', icon: Users, href: '/warehouse/clients' },
   { label: 'Inventory', icon: Boxes, comingIn: 'Phase 1' },
   { label: 'Orders', icon: ShoppingBag, comingIn: 'Phase 1' },
   { label: 'Settings', icon: Settings, comingIn: 'Phase 1' },

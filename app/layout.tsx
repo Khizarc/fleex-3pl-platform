@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
+import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import './globals.css';
 
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
          */}
         <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
           <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>

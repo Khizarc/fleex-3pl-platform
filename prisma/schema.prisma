@@ -142,8 +142,11 @@ model Client {
 /// the Client Portal. A Client may have several ClientUsers.
 /// Authentication is handled by Clerk; `authProviderId` links to the Clerk user.
 model ClientUser {
-  id             String        @id @default(cuid())
-  authProviderId String        @unique // Clerk user ID
+  id String @id @default(cuid())
+  /// Clerk user ID. NULL until the invitee signs up and claim-by-email links
+  /// the row (lib/auth/current-user.ts). PostgreSQL treats multiple NULLs as
+  /// distinct, so the @unique constraint still permits multiple unclaimed rows.
+  authProviderId String?       @unique
   email          String
   name           String
   status         AccountStatus @default(ACTIVE)

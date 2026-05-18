@@ -36,9 +36,10 @@ export type ClientPortalContext = {
 };
 
 // Staff entry point. Redirects:
-//   - unauthenticated         → /sign-in
-//   - is a ClientUser instead → /portal (wrong shell)
-//   - brand-new sign-up       → auto-provision new Company + admin User
+//   - unauthenticated                    → /sign-in
+//   - is a ClientUser by authProviderId  → /portal (wrong shell)
+//   - has an unclaimed ClientUser invite → /portal (let portal helper claim it)
+//   - brand-new sign-up, no invite       → auto-provision new Company + admin User
 //
 // Wrapped in React `cache()` so a route group layout AND its child pages
 // share one resolution per request (no duplicate DB hits).
@@ -63,30 +64,46 @@ export const getCurrentStaffContext = cache(async (): Promise<StaffContext> => {
   });
   if (asClient) redirect('/portal');
 
-  return autoProvisionStaff(session.userId);
+  // If an admin has invited this email as a ClientUser (Milestone 0.5),
+  // send them to /portal — claiming happens there.
+  const inviteEmail = await getSessionEmail();
+  if (inviteEmail) {
+    const invited = await findUnclaimedInviteByEmail(inviteEmail);
+    if (invited) redirect('/portal');
+  }
+
+  return autoProvisionStaff(session.userId, inviteEmail);
 });
 
 // Client portal entry point. Redirects:
-//   - unauthenticated    → /sign-in
-//   - is a User instead  → /warehouse (wrong shell)
-//   - no ClientUser row  → /access-pending (must be invited by 3PL admin in 0.5+)
-//
-// Same cache() wrapper rationale as `getCurrentStaffContext`.
+//   - unauthenticated                    → /sign-in
+//   - has matching ClientUser            → return client context
+//   - has unclaimed ClientUser by email  → claim it, return client context
+//   - is a staff User instead            → /warehouse (wrong shell)
+//   - none of the above                  → /access-pending
 export const getCurrentClientContext = cache(async (): Promise<ClientPortalContext> => {
   const session = await auth();
   if (!session.userId) redirect('/sign-in');
 
-  const existing = await prisma.clientUser.findUnique({
+  const claimed = await prisma.clientUser.findUnique({
     where: { authProviderId: session.userId },
     include: { client: { include: { company: true } } },
   });
-  if (existing) {
-    return {
-      clientUser: existing,
-      client: existing.client,
-      company: existing.client.company,
-      tenant: { companyId: existing.companyId, clientId: existing.clientId },
-    };
+  if (claimed) return toClientContext(claimed);
+
+  // Claim-by-email: a pre-created ClientUser with authProviderId = NULL whose
+  // email matches this Clerk user's email. See docs/ARCHITECTURE.md decision
+  // log for 0.5.
+  const email = await getSessionEmail();
+  if (email) {
+    const justClaimed = await claimInviteForUser(session.userId, email);
+    if (justClaimed) {
+      const full = await prisma.clientUser.findUnique({
+        where: { id: justClaimed.id },
+        include: { client: { include: { company: true } } },
+      });
+      if (full) return toClientContext(full);
+    }
   }
 
   const asStaff = await prisma.user.findUnique({
@@ -97,14 +114,64 @@ export const getCurrentClientContext = cache(async (): Promise<ClientPortalConte
   redirect('/access-pending');
 });
 
+// ----------------------------------------------------------------------------
+// Internals
+// ----------------------------------------------------------------------------
+
+type ClientUserWithRelations = ClientUser & { client: Client & { company: Company } };
+
+function toClientContext(row: ClientUserWithRelations): ClientPortalContext {
+  return {
+    clientUser: row,
+    client: row.client,
+    company: row.client.company,
+    tenant: { companyId: row.companyId, clientId: row.clientId },
+  };
+}
+
+async function getSessionEmail(): Promise<string | undefined> {
+  const clerk = await currentUser();
+  return clerk?.emailAddresses[0]?.emailAddress;
+}
+
+function findUnclaimedInviteByEmail(email: string) {
+  // Oldest unclaimed match wins — deterministic if an admin pre-created
+  // multiple invites with the same email across different clients.
+  return prisma.clientUser.findFirst({
+    where: { email, authProviderId: null },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
+// Race-safe claim: `updateMany` filters on `authProviderId IS NULL` so a
+// concurrent claim on the same candidate returns count=0. We re-read by the
+// new owner's authProviderId to surface whichever row was already linked.
+async function claimInviteForUser(clerkUserId: string, email: string): Promise<ClientUser | null> {
+  const candidate = await findUnclaimedInviteByEmail(email);
+  if (!candidate) return null;
+
+  const result = await prisma.clientUser.updateMany({
+    where: { id: candidate.id, authProviderId: null },
+    data: { authProviderId: clerkUserId },
+  });
+  if (result.count === 1) {
+    return prisma.clientUser.findUnique({ where: { id: candidate.id } });
+  }
+  return prisma.clientUser.findUnique({ where: { authProviderId: clerkUserId } });
+}
+
 // Auto-provision: brand-new signed-up user becomes the admin of their own 3PL.
 // Race-safe: the User.authProviderId unique constraint resolves duplicate
 // concurrent inserts; we catch P2002 and return whichever row won.
-async function autoProvisionStaff(clerkUserId: string): Promise<StaffContext> {
+async function autoProvisionStaff(
+  clerkUserId: string,
+  precomputedEmail?: string,
+): Promise<StaffContext> {
   const clerk = await currentUser();
   if (!clerk) redirect('/sign-in');
 
-  const email = clerk.emailAddresses[0]?.emailAddress ?? `${clerkUserId}@unknown`;
+  const email =
+    precomputedEmail ?? clerk.emailAddresses[0]?.emailAddress ?? `${clerkUserId}@unknown`;
   const displayName = [clerk.firstName, clerk.lastName].filter(Boolean).join(' ') || email;
   const workspaceName = `${email.split('@')[0]}'s Workspace`;
 
