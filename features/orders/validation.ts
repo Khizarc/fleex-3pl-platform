@@ -50,7 +50,13 @@ export const cancelOrderInputSchema = z.object({
   orderId: z.string().min(1),
 });
 
+export const pickAllocationInputSchema = z.object({
+  allocationId: z.string().min(1, 'Allocation id is required'),
+  scannedBinLabel: z.string().trim().min(1, 'Type or scan the bin label to confirm').max(120),
+});
+
 export type OrderLineInput = z.infer<typeof orderLineInputSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
 export type AllocateOrderInput = z.infer<typeof allocateOrderInputSchema>;
 export type CancelOrderInput = z.infer<typeof cancelOrderInputSchema>;
+export type PickAllocationInput = z.infer<typeof pickAllocationInputSchema>;

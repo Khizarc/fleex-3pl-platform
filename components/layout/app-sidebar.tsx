@@ -4,6 +4,7 @@ import {
   ArchiveRestore,
   Boxes,
   Building2,
+  ClipboardCheck,
   LayoutDashboard,
   Package,
   Settings,
@@ -32,6 +33,7 @@ const warehouseNav: SidebarNavItemProps[] = [
   { label: 'Inbound shipments', icon: Truck, href: '/warehouse/inbound-shipments' },
   { label: 'Inventory', icon: Boxes, href: '/warehouse/inventory' },
   { label: 'Orders', icon: ShoppingBag, href: '/warehouse/orders' },
+  { label: 'Pick', icon: ClipboardCheck, href: '/warehouse/pick' },
   { label: 'Settings', icon: Settings, comingIn: 'Phase 5' },
 ];
 

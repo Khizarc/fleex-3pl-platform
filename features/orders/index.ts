@@ -7,6 +7,14 @@ export { cancelOrder } from './services/cancel-order';
 export { listOrders, type OrderListRow } from './services/list-orders';
 export { getOrder } from './services/get-order';
 export { bulkCreateOrders, type BulkCreateOrdersResult } from './services/bulk-create-orders';
+export {
+  pickAllocation,
+  BinLabelMismatchError,
+  AllocationAlreadyPickedError,
+  BinNotActiveError,
+} from './services/pick-allocation';
+export { listPickQueue, type PickQueueRow } from './services/list-pick-queue';
+export { getPickList, type PickListItem } from './services/get-pick-list';
 
 export {
   parseCsv,
@@ -32,8 +40,10 @@ export {
   allocateOrderInputSchema,
   cancelOrderInputSchema,
   orderLineInputSchema,
+  pickAllocationInputSchema,
   type CreateOrderInput,
   type OrderLineInput,
   type AllocateOrderInput,
   type CancelOrderInput,
+  type PickAllocationInput,
 } from './validation';

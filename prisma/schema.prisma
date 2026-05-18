@@ -144,8 +144,9 @@ model User {
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // --- Relations (Milestone 1.3+) ---
-  receivedInboundLines InboundShipmentLine[] @relation("ReceivedBy")
-  createdOrders        Order[]               @relation("CreatedByStaff")
+  receivedInboundLines InboundShipmentLine[]   @relation("ReceivedBy")
+  createdOrders        Order[]                 @relation("CreatedByStaff")
+  picksPerformed       OrderLineAllocation[]   @relation("PickedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -552,10 +553,16 @@ model OrderLineItem {
 /// allocateOrder; deleted by cancelOrder (after restoring stock) or by 1.8
 /// pick (when RESERVED converts to picked-out).
 model OrderLineAllocation {
-  id                String @id @default(cuid())
-  orderLineItemId   String
-  binId             String
-  quantityReserved  Int
+  id               String @id @default(cuid())
+  orderLineItemId  String
+  binId            String
+  quantityReserved Int
+
+  // --- Pick tracking (Milestone 1.8) ---
+  // Null until a picker confirms the bin trip. Once set, RESERVED stock on
+  // the (skuId, binId) row has been decremented by `quantityReserved`.
+  pickedAt       DateTime?
+  pickedByUserId String?
 
   // Denormalized from orderLineItem — required for two-level RLS.
   clientId  String
@@ -563,6 +570,7 @@ model OrderLineAllocation {
 
   orderLineItem OrderLineItem @relation(fields: [orderLineItemId], references: [id], onDelete: Cascade)
   bin           Bin           @relation(fields: [binId], references: [id], onDelete: Restrict)
+  pickedBy      User?         @relation("PickedBy", fields: [pickedByUserId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -572,6 +580,7 @@ model OrderLineAllocation {
   @@index([binId])
   @@index([clientId])
   @@index([companyId])
+  @@index([pickedByUserId])
 }
 
 // ============================================================================
