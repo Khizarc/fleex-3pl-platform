@@ -5,6 +5,7 @@ import {
   Boxes,
   Building2,
   LayoutDashboard,
+  Package,
   Settings,
   ShoppingBag,
   Users,
@@ -33,8 +34,9 @@ const warehouseNav: SidebarNavItemProps[] = [
 
 const portalNav: SidebarNavItemProps[] = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/portal' },
-  { label: 'Inventory', icon: Boxes, comingIn: 'Phase 1' },
-  { label: 'Orders', icon: ShoppingBag, comingIn: 'Phase 1' },
+  { label: 'Products', icon: Package, href: '/portal/products' },
+  { label: 'Inventory', icon: Boxes, comingIn: '1.4' },
+  { label: 'Orders', icon: ShoppingBag, comingIn: '1.5' },
   { label: 'Returns', icon: ArchiveRestore, comingIn: 'Phase 5' },
 ];
 

@@ -129,6 +129,7 @@ model Client {
 
   // --- Relations ---
   clientUsers ClientUser[]
+  products    Product[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -253,6 +254,62 @@ model Bin {
   @@unique([aisleId, label])
   @@index([companyId])
   @@index([aisleId])
+}
+
+// ============================================================================
+// PRODUCT CATALOG (Milestone 1.2)
+// ============================================================================
+// Products are owned by a Client (the client owns the goods). SKUs are the
+// atomic units of inventory: a product can have many SKUs (variants).
+// Both tables are two-level tenant-scoped (companyId + clientId), so the
+// USING clauses enforce the Company + optional Client filter — same pattern
+// as `Client` and `ClientUser`.
+
+/// A sellable product belonging to a Client. Definition only — quantities
+/// live in StockLevel (Milestone 1.4+).
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      AccountStatus @default(ACTIVE)
+
+  clientId  String
+  // Denormalized from client.companyId — must always match.
+  companyId String
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  skus   SKU[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, name])
+  @@index([clientId])
+  @@index([companyId])
+}
+
+/// A specific variant of a Product (e.g., "Acme Tee · Red · Large").
+/// SKU codes are unique within a client's catalog.
+model SKU {
+  id     String        @id @default(cuid())
+  code   String
+  name   String
+  status AccountStatus @default(ACTIVE)
+
+  productId String
+  // Denormalized from product (which in turn denormalizes from client).
+  clientId  String
+  companyId String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, code])
+  @@index([productId])
+  @@index([clientId])
+  @@index([companyId])
 }
 
 // ============================================================================

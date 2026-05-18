@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Client } from '@prisma/client';
 import {
   Table,
@@ -21,7 +22,14 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
       <TableBody>
         {clients.map((c) => (
           <TableRow key={c.id}>
-            <TableCell className="font-medium">{c.name}</TableCell>
+            <TableCell className="font-medium">
+              <Link
+                href={`/warehouse/clients/${c.id}`}
+                className="underline-offset-4 hover:underline"
+              >
+                {c.name}
+              </Link>
+            </TableCell>
             <TableCell className="text-muted-foreground text-sm">
               {c.status.toLowerCase()}
             </TableCell>
