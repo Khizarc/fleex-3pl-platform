@@ -34,7 +34,7 @@ A multi-tenant 3PL (third-party logistics) warehouse and shipping platform — N
 
 ## Stack at a glance
 
-Next.js (TypeScript, strict) · PostgreSQL on Neon · Prisma · Clerk auth · Stripe payments · EasyPost carriers · Upstash QStash background jobs · Vercel hosting. Full reasoning in [docs/ARCHITECTURE.md §2](docs/ARCHITECTURE.md).
+Next.js (TypeScript, strict) · PostgreSQL on Neon · Prisma · Clerk auth · Tailwind v4 + shadcn/ui · Stripe payments · EasyPost carriers · Upstash QStash background jobs · Vercel hosting. Full reasoning in [docs/ARCHITECTURE.md §2](docs/ARCHITECTURE.md).
 
 ## Working with this project
 

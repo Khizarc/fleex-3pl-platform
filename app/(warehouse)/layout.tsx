@@ -1,6 +1,14 @@
 import type { ReactNode } from 'react';
+import { AppShell } from '@/components/layout/app-shell';
+import { getCurrentStaffContext } from '@/lib/auth';
 
-export default function WarehouseGroupLayout({ children }: { children: ReactNode }) {
-  // Staff auth gate lands in Milestone 0.3.
-  return <>{children}</>;
+export default async function WarehouseGroupLayout({ children }: { children: ReactNode }) {
+  // Resolve the staff context once at the group level so the shell can
+  // render the company name in the brand without each page re-fetching.
+  const { company } = await getCurrentStaffContext();
+  return (
+    <AppShell variant="warehouse" brand={company.name}>
+      {children}
+    </AppShell>
+  );
 }

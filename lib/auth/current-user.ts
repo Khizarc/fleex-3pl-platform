@@ -18,6 +18,7 @@ import {
   type User,
 } from '@prisma/client';
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 import { prisma } from '@/lib/db/prisma';
 import type { TenantContext } from '@/lib/tenancy';
 
@@ -38,7 +39,10 @@ export type ClientPortalContext = {
 //   - unauthenticated         → /sign-in
 //   - is a ClientUser instead → /portal (wrong shell)
 //   - brand-new sign-up       → auto-provision new Company + admin User
-export async function getCurrentStaffContext(): Promise<StaffContext> {
+//
+// Wrapped in React `cache()` so a route group layout AND its child pages
+// share one resolution per request (no duplicate DB hits).
+export const getCurrentStaffContext = cache(async (): Promise<StaffContext> => {
   const session = await auth();
   if (!session.userId) redirect('/sign-in');
 
@@ -60,13 +64,15 @@ export async function getCurrentStaffContext(): Promise<StaffContext> {
   if (asClient) redirect('/portal');
 
   return autoProvisionStaff(session.userId);
-}
+});
 
 // Client portal entry point. Redirects:
 //   - unauthenticated    → /sign-in
 //   - is a User instead  → /warehouse (wrong shell)
 //   - no ClientUser row  → /access-pending (must be invited by 3PL admin in 0.5+)
-export async function getCurrentClientContext(): Promise<ClientPortalContext> {
+//
+// Same cache() wrapper rationale as `getCurrentStaffContext`.
+export const getCurrentClientContext = cache(async (): Promise<ClientPortalContext> => {
   const session = await auth();
   if (!session.userId) redirect('/sign-in');
 
@@ -89,7 +95,7 @@ export async function getCurrentClientContext(): Promise<ClientPortalContext> {
   if (asStaff) redirect('/warehouse');
 
   redirect('/access-pending');
-}
+});
 
 // Auto-provision: brand-new signed-up user becomes the admin of their own 3PL.
 // Race-safe: the User.authProviderId unique constraint resolves duplicate
