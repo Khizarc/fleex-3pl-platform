@@ -1,0 +1,22 @@
+# Build output and dependencies
+.next/
+node_modules/
+dist/
+build/
+out/
+coverage/
+playwright-report/
+test-results/
+
+# Lockfiles
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Prisma generated artifacts
+prisma/migrations/
+
+# Markdown is hand-authored prose, not code. Style is the author's choice;
+# tooling enforces code style, not narrative formatting.
+*.md
+

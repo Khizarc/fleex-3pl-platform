@@ -1,7 +1,7 @@
 # CLAUDE.md — Standing Instructions
 
 > Claude Code reads this file every session. It defines how to work on this project: the rules that always apply, the conventions, and the things never to do.
-> **Companion documents:** `BUILD-PLAN.md` (the phased roadmap and full rationale) and `ARCHITECTURE.md` (stack decisions, data model, state machines). Read both before starting.
+> **Companion documents:** `docs/BUILD-PLAN.md` (the phased roadmap and full rationale) and `docs/ARCHITECTURE.md` (stack decisions, data model, state machines). Read both before starting.
 
 ---
 
@@ -9,20 +9,20 @@
 
 A multi-tenant 3PL warehouse and shipping platform. Four interlocking systems: a multi-tenant backbone, two front-end apps (Warehouse Dashboard + Client Portal) sharing one backend, a workflow/state engine, and an integration layer (Shopify, Amazon, WooCommerce, EasyPost, QuickBooks, Stripe).
 
-**Stack:** Next.js + TypeScript (strict) + PostgreSQL (Neon) + Prisma. Auth via Clerk. Background jobs via Upstash QStash. Payments via Stripe. Carriers via EasyPost. Hosted on Vercel. Full reasoning is in `ARCHITECTURE.md`.
+**Stack:** Next.js + TypeScript (strict) + PostgreSQL (Neon) + Prisma. Auth via Clerk. Background jobs via Upstash QStash. Payments via Stripe. Carriers via EasyPost. Hosted on Vercel. Full reasoning is in `docs/ARCHITECTURE.md`.
 
 ---
 
 ## How we work — the per-milestone loop
 
-Work happens **one milestone at a time** (milestones are defined in `BUILD-PLAN.md` §7). For every milestone:
+Work happens **one milestone at a time** (milestones are defined in `docs/BUILD-PLAN.md` §7). For every milestone:
 
 1. **Plan before code.** First produce a plan: data-model changes, API endpoints, screens, tests — **and the list of files to be created or changed, with each file's single responsibility stated.** No code yet.
 2. **Wait for the plan to be reviewed and approved.** Do not start coding until then.
 3. **Build the vertical slice** — database → API → UI → tests — for that one milestone only. Don't build ahead.
 4. **Run the full test suite**, especially the tenant-isolation tests.
 5. **Check file size and single-responsibility** before calling the milestone done. If a file grew too big, split it now — as part of this milestone, not later.
-6. **Flag anything** that contradicts `BUILD-PLAN.md` or `ARCHITECTURE.md` so those documents can be updated.
+6. **Flag anything** that contradicts `docs/BUILD-PLAN.md` or `docs/ARCHITECTURE.md` so those documents can be updated.
 
 Never try to build a whole phase, and never build the whole proposal at once.
 
@@ -41,7 +41,7 @@ These always apply. If a request conflicts with one of these, stop and raise it 
 
 ### State management
 - State changes go through the **validated transition layer**, never direct status writes.
-- Illegal state transitions are rejected at the service layer. Refer to the state machines in `ARCHITECTURE.md` §5.
+- Illegal state transitions are rejected at the service layer. Refer to the state machines in `docs/ARCHITECTURE.md` §5.
 
 ### Billing & money
 - **Billable events are written at event time**, appended to the ledger — never recalculated later. Invoicing reads the ledger; it never re-derives history.
@@ -60,12 +60,12 @@ These always apply. If a request conflicts with one of these, stop and raise it 
 
 ## Code organization — keep the codebase clean
 
-This carries the same weight as tenant isolation. Full rationale in `BUILD-PLAN.md` §3a.
+This carries the same weight as tenant isolation. Full rationale in `docs/BUILD-PLAN.md` §3a.
 
 - **No giant files.** A file approaching a few hundred lines is a signal to split it. "Thousands of lines in one file" is always wrong — if a file is big, it's doing too much.
 - **One file, one responsibility** — describable in a single sentence without needing "and" several times.
 - **Small functions** — one job each. Decompose long branchy functions into named helpers.
-- **Feature-oriented folders** — organize by domain (receiving, inventory, orders, billing, shipping), not by lumping all routes or all components together. See the folder structure in `ARCHITECTURE.md` §6.
+- **Feature-oriented folders** — organize by domain (receiving, inventory, orders, billing, shipping), not by lumping all routes or all components together. See the folder structure in `docs/ARCHITECTURE.md` §6.
 - **Separate the layers** — database access, services (business logic), API routes, and UI components live in distinct files. A component never runs raw queries. An API route never holds business logic — it calls a service.
 - **Extract shared logic** — pricing math, state-transition validation, tenant helpers — written once, imported everywhere. Never copy-paste.
 - **Name things honestly** — a file/function/variable name should tell the truth about what it does.
@@ -100,4 +100,4 @@ This carries the same weight as tenant isolation. Full rationale in `BUILD-PLAN.
 
 ## When unsure
 
-If a request is ambiguous, conflicts with `BUILD-PLAN.md` / `ARCHITECTURE.md`, or would require breaking a non-negotiable rule — **stop and ask** rather than guessing. A clarifying question is cheap; a wrong architectural decision is expensive.
+If a request is ambiguous, conflicts with `docs/BUILD-PLAN.md` / `docs/ARCHITECTURE.md`, or would require breaking a non-negotiable rule — **stop and ask** rather than guessing. A clarifying question is cheap; a wrong architectural decision is expensive.

@@ -237,5 +237,8 @@ This is indicative — adjust as the app grows, but keep the feature-oriented an
 | Project start | Hosting: Vercel + Neon + Upstash | Managed across the board |
 | Project start | Background jobs: Upstash QStash | Revisit if orchestration grows complex |
 | Project start | Carrier integration: EasyPost (aggregator) | Direct carrier APIs deferred |
+| 2026-05-17 | RLS enforced via two-role pattern on a single connection string | Owner role (`neondb_owner` on Neon / `postgres` in CI) is used for migrations + test fixture setup and bypasses RLS naturally. App runtime queries go through `withTenantContext` (lib/db/tenant-context.ts) which opens a transaction, runs `SET LOCAL ROLE app_user`, then sets `app.current_company_id` and `app.current_client_id` via `set_config(..., true)`. Policies use `current_setting('...', true)`. Both context vars are always set (empty string sentinel for missing client) so policy OR-arms don't short-circuit on NULL. |
+| 2026-05-17 | CI tests against ephemeral Postgres 16 service | Neon test-branch testing deferred to Phase 6 (hardening). RLS is a Postgres feature, identical semantics on Neon vs. vanilla Postgres. |
+| 2026-05-17 | Self-serve auto-provisioning for staff sign-ups (Milestone 0.3) | Sign-up via Clerk → on first visit to `/warehouse`, `lib/auth/current-user.ts` auto-creates a new Company + admin User row in a transaction. Race-safe via the `User.authProviderId` unique constraint + P2002 retry. ClientUser provisioning remains admin-driven (deferred to Milestone 0.5's admin invite UI). Auth lookup uses the owner Prisma client; all post-resolution queries go through `withTenantContext`. |
 
 > Append to this log whenever a decision changes. Never edit history — add a new row.

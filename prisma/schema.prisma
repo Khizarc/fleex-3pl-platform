@@ -7,25 +7,30 @@
 //   multi-tenancy scaffolding.
 //
 // Feature entities (Warehouse, Bin, Product, Order, Invoice, etc.) are added
-// in later phases — see ARCHITECTURE.md §4 for the full planned data model.
+// in later phases — see docs/ARCHITECTURE.md §4 for the full planned data model.
 //
 // MULTI-TENANCY: Every table except `Company` carries `companyId` (the owning
 // 3PL — this is the `tenant_id`). Row-Level Security (RLS) policies are applied
 // via raw SQL migrations on top of this schema — Prisma defines the tables,
 // SQL migrations define the RLS policies. See the note at the bottom of this
-// file and ARCHITECTURE.md §3.
+// file and docs/ARCHITECTURE.md §3.
 //
 // REVIEW THIS before running the first migration. The schema is the spine of
 // the app — getting it right on paper is cheaper than changing it later.
 // ============================================================================
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // native = host (macOS dev). linux-musl-openssl-3.0.x = Vercel / Alpine CI runners.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // DATABASE_URL is the pooled connection (pgBouncer transaction mode) — used at runtime.
+  url       = env("DATABASE_URL")
+  // DIRECT_URL bypasses the pooler — used by `prisma migrate` for shadow DB ops.
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================================================
@@ -177,7 +182,7 @@ model ClientUser {
 //
 //   3. The per-request tenant-context middleware sets `app.current_company_id`
 //      (and, for portal requests, the client context) at the start of every
-//      request — see ARCHITECTURE.md §3.
+//      request — see docs/ARCHITECTURE.md §3.
 //
 // RULE (from CLAUDE.md): every new tenant-scoped table gets `companyId` PLUS an
 // RLS policy IN THE SAME MIGRATION — never as a follow-up.

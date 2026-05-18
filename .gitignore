@@ -20,6 +20,9 @@ build/
 # Testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+.playwright/
 
 # Logs
 *.log
@@ -38,6 +41,9 @@ Thumbs.db
 *.swo
 .idea/
 *.iml
+
+# Claude Code per-machine settings (team-shared settings live in .claude/settings.json)
+.claude/settings.local.json
 
 # Vercel
 .vercel
