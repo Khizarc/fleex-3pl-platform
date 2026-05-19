@@ -1,13 +1,10 @@
 'use client';
 
-// Shared dialog used by both shells. The parent passes its own server action
-// as the `action` prop, which resolves the right tenant context per shell.
-
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,49 +19,43 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { createProductSchema, type CreateProductInput } from '@/features/products';
+import { inviteClientUserSchema, type InviteClientUserInput } from '@/features/clients';
 
-type ActionResult = { ok: true; data: { id: string } } | { ok: false; error: string };
+type ActionResult = { ok: true } | { ok: false; error: string };
 
-export function CreateProductDialog({
+export function InviteClientUserDialog({
+  clientName,
   action,
-  triggerLabel = 'Add product',
-  onCreatedBasePath,
 }: {
-  action: (input: CreateProductInput) => Promise<ActionResult>;
-  triggerLabel?: string;
-  /** Path prefix; after create we navigate to `${onCreatedBasePath}/${id}?addSku=1`
-   * so the SKU dialog auto-opens (Shopify-style streamlined flow). String —
-   * not a function — so it crosses the server→client boundary cleanly. */
-  onCreatedBasePath?: string;
+  clientName: string;
+  action: (input: InviteClientUserInput) => Promise<ActionResult>;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const form = useForm<CreateProductInput>({
-    resolver: zodResolver(createProductSchema),
-    defaultValues: { name: '', description: '' },
+  const form = useForm<InviteClientUserInput>({
+    resolver: zodResolver(inviteClientUserSchema),
+    defaultValues: { email: '', name: '' },
   });
 
-  function onSubmit(values: CreateProductInput) {
+  function onSubmit(values: InviteClientUserInput) {
     startTransition(async () => {
       const result = await action(values);
       if (result.ok) {
-        toast.success('Product created');
+        toast.success(`Portal invite sent to ${values.email}`, {
+          description: `They sign up at /sign-up with this email to claim access.`,
+        });
         form.reset();
         setOpen(false);
-        if (onCreatedBasePath) {
-          router.push(`${onCreatedBasePath}/${result.data.id}?addSku=1`);
-        } else {
-          router.refresh();
-        }
+        router.refresh();
       } else {
         toast.error(result.error);
       }
@@ -74,45 +65,47 @@ export function CreateProductDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="size-4" />
-          {triggerLabel}
+        <Button variant="outline" size="sm">
+          <UserPlus className="size-4" />
+          Invite portal user
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add a product</DialogTitle>
+          <DialogTitle>Invite a portal user for {clientName}</DialogTitle>
           <DialogDescription>
-            Define a sellable product. You can add SKU variants after creating it.
+            They&apos;ll sign up at /sign-up using this email to claim access to {clientName}&apos;s
+            portal — where they can submit orders, view inventory, and track shipments.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>
+                    Email <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Acme Tee" {...field} />
+                    <Input type="email" placeholder="contact@acme.com" autoFocus {...field} />
                   </FormControl>
+                  <FormDescription>Where the invite is claimed from.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="description"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description (optional)</FormLabel>
+                  <FormLabel>
+                    Name <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Cotton t-shirt, screen printed"
-                      {...field}
-                      value={field.value ?? ''}
-                    />
+                    <Input placeholder="Jane Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -123,7 +116,7 @@ export function CreateProductDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? 'Creating…' : 'Create product'}
+                {pending ? 'Sending…' : 'Send invite'}
               </Button>
             </DialogFooter>
           </form>

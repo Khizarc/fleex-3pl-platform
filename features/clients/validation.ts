@@ -32,3 +32,16 @@ export const createClientSchema = z
   );
 
 export type CreateClientInput = z.infer<typeof createClientSchema>;
+
+// Schema for inviting an additional portal user to an existing client.
+// Both email and name are required (unlike createClient where they're optional).
+export const inviteClientUserSchema = z.object({
+  email: z.email('Enter a valid email address'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(120, 'Name must be 120 characters or fewer'),
+});
+
+export type InviteClientUserInput = z.infer<typeof inviteClientUserSchema>;

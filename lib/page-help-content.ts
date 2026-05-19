@@ -25,9 +25,9 @@ export const PAGE_HELP: Record<string, PageHelpContent> = {
     whatItIsFor: 'The brands whose goods you store and ship.',
     howItWorks: [
       'Each client has its own products, inventory, orders, and portal users.',
-      'Invite a portal user during client creation so they can submit orders themselves.',
+      'Click a row → invite portal users, add products/SKUs, and define personalization fields.',
     ],
-    commonTasks: ['Add a client', 'Click a row to manage products and personalization'],
+    commonTasks: ['Add a client', "Invite the client's portal user from their detail page"],
   },
   'warehouse.warehouses': {
     title: 'Warehouses',
@@ -98,12 +98,14 @@ export const PAGE_HELP: Record<string, PageHelpContent> = {
   },
   'warehouse.team': {
     title: 'Team',
-    whatItIsFor: 'Manage staff: invite, change roles, view productivity.',
+    whatItIsFor: "Your warehouse staff (NOT your clients' portal users).",
     howItWorks: [
       'Invite by email; staff signs up via Clerk and the row is claimed by their email.',
-      "Roles gate which workflows they can perform. Last active ADMIN can't be removed.",
+      "Roles gate which workflows they can perform (PICKER picks, PACKER packs, etc.). Last active ADMIN can't be removed.",
+      "To invite a CLIENT's portal user, go to that client's detail page instead — different access surface.",
     ],
     commonTasks: ['Invite a staff member', 'Change role or status'],
+    related: [{ label: 'Clients', href: '/warehouse/clients' }],
   },
   'warehouse.personalization': {
     title: 'Personalization',

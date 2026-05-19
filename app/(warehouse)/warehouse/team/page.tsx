@@ -34,7 +34,7 @@ export default async function TeamPage() {
     <div className="space-y-6">
       <PageHeader
         title="Team"
-        description="Manage staff roles, status, and view all-time productivity counts. Invited staff sign up via Clerk and are claimed by email."
+        description="Your warehouse staff — admins, receivers, pickers, packers, and shippers. (To invite a client's portal user instead, open the client's detail page.)"
         action={<InviteStaffDialog />}
         helpKey="warehouse.team"
       />

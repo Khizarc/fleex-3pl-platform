@@ -19,10 +19,7 @@ export default async function PortalProductsPage() {
         title="Products"
         description={`${client.name}'s product catalog. Add SKU variants under each product to track inventory.`}
         action={
-          <CreateProductDialog
-            action={createProductAction}
-            onCreatedHref={(productId) => `/portal/products/${productId}`}
-          />
+          <CreateProductDialog action={createProductAction} onCreatedBasePath="/portal/products" />
         }
         helpKey="portal.products"
       />
@@ -35,7 +32,7 @@ export default async function PortalProductsPage() {
           action={
             <CreateProductDialog
               action={createProductAction}
-              onCreatedHref={(productId) => `/portal/products/${productId}`}
+              onCreatedBasePath="/portal/products"
             />
           }
         />
