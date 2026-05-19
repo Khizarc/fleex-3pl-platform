@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FileUp, Plus, ShoppingBag } from 'lucide-react';
+import { ChevronRight, FileUp, Plus, ShoppingBag } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -69,15 +69,19 @@ export default async function WarehouseOrdersPage() {
                 <TableHead>Total qty</TableHead>
                 <TableHead>Ship to</TableHead>
                 <TableHead className="text-right">Submitted</TableHead>
+                <TableHead className="w-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {orders.map((o) => (
-                <TableRow key={o.id}>
+                <TableRow
+                  key={o.id}
+                  className="hover:bg-accent/40 group relative cursor-pointer transition-colors"
+                >
                   <TableCell className="font-medium">
                     <Link
                       href={`/warehouse/orders/${o.id}`}
-                      className="underline-offset-4 hover:underline"
+                      className="after:absolute after:inset-0 after:content-['']"
                     >
                       {o.reference}
                     </Link>
@@ -93,6 +97,9 @@ export default async function WarehouseOrdersPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground text-right text-sm">
                     {o.submittedAt.toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="w-8">
+                    <ChevronRight className="text-muted-foreground size-4 opacity-50 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </TableCell>
                 </TableRow>
               ))}

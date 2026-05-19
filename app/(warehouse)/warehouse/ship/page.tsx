@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Send } from 'lucide-react';
+import { ChevronRight, Send } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -45,15 +45,19 @@ export default async function ShipQueuePage() {
                 <TableHead>Total qty</TableHead>
                 <TableHead>Ship to</TableHead>
                 <TableHead className="text-right">Packed</TableHead>
+                <TableHead className="w-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {queue.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  className="hover:bg-accent/40 group relative cursor-pointer transition-colors"
+                >
                   <TableCell className="font-medium">
                     <Link
                       href={`/warehouse/ship/${row.id}`}
-                      className="underline-offset-4 hover:underline"
+                      className="after:absolute after:inset-0 after:content-['']"
                     >
                       {row.reference}
                     </Link>
@@ -74,6 +78,9 @@ export default async function ShipQueuePage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground text-right text-sm">
                     {row.packedAt ? row.packedAt.toLocaleDateString() : '—'}
+                  </TableCell>
+                  <TableCell className="w-8">
+                    <ChevronRight className="text-muted-foreground size-4 opacity-50 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </TableCell>
                 </TableRow>
               ))}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, Truck } from 'lucide-react';
+import { ChevronRight, Plus, Truck } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -59,15 +59,19 @@ export default async function PortalInboundShipmentsPage() {
                 <TableHead>Lines</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Created</TableHead>
+                <TableHead className="w-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {shipments.map((s) => (
-                <TableRow key={s.id}>
+                <TableRow
+                  key={s.id}
+                  className="hover:bg-accent/40 group relative cursor-pointer transition-colors"
+                >
                   <TableCell className="font-medium">
                     <Link
                       href={`/portal/inbound-shipments/${s.id}`}
-                      className="underline-offset-4 hover:underline"
+                      className="after:absolute after:inset-0 after:content-['']"
                     >
                       {s.reference ?? `Shipment ${s.id.slice(0, 8)}`}
                     </Link>
@@ -81,6 +85,9 @@ export default async function PortalInboundShipmentsPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground text-right text-sm">
                     {s.createdAt.toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="w-8">
+                    <ChevronRight className="text-muted-foreground size-4 opacity-50 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </TableCell>
                 </TableRow>
               ))}
