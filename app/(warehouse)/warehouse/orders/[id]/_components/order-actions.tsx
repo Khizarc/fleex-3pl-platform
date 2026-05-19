@@ -4,6 +4,7 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { allocateOrderAction, cancelOrderAction } from '../actions';
 
 export function OrderActions({
@@ -30,19 +31,14 @@ export function OrderActions({
     });
   }
 
-  function runCancel() {
-    if (!window.confirm('Cancel this order? Any reserved stock will be returned to inventory.')) {
-      return;
+  async function runCancel() {
+    const result = await cancelOrderAction(orderId);
+    if (result.ok) {
+      toast.success('Order cancelled');
+      router.refresh();
+    } else {
+      toast.error(result.error);
     }
-    startTransition(async () => {
-      const result = await cancelOrderAction(orderId);
-      if (result.ok) {
-        toast.success('Order cancelled');
-        router.refresh();
-      } else {
-        toast.error(result.error);
-      }
-    });
   }
 
   if (!canAllocate && !canCancel) return null;
@@ -55,9 +51,19 @@ export function OrderActions({
         </Button>
       ) : null}
       {canCancel ? (
-        <Button variant="outline" size="sm" disabled={pending} onClick={runCancel}>
-          Cancel order
-        </Button>
+        <ConfirmDialog
+          trigger={
+            <Button variant="outline" size="sm">
+              Cancel order
+            </Button>
+          }
+          title="Cancel this order?"
+          description="Any reserved stock will be returned to inventory. This cannot be undone."
+          confirmLabel="Cancel order"
+          cancelLabel="Keep order"
+          tone="danger"
+          onConfirm={runCancel}
+        />
       ) : null}
     </div>
   );
