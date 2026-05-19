@@ -35,9 +35,13 @@ type ActionResult = { ok: true; data: { id: string } } | { ok: false; error: str
 export function CreateProductDialog({
   action,
   triggerLabel = 'Add product',
+  onCreatedHref,
 }: {
   action: (input: CreateProductInput) => Promise<ActionResult>;
   triggerLabel?: string;
+  /** When provided, after create the dialog navigates here with ?addSku=1 so
+   * the SKU dialog auto-opens (Shopify-style streamlined flow). */
+  onCreatedHref?: (id: string) => string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -55,7 +59,11 @@ export function CreateProductDialog({
         toast.success('Product created');
         form.reset();
         setOpen(false);
-        router.refresh();
+        if (onCreatedHref) {
+          router.push(`${onCreatedHref(result.data.id)}?addSku=1`);
+        } else {
+          router.refresh();
+        }
       } else {
         toast.error(result.error);
       }

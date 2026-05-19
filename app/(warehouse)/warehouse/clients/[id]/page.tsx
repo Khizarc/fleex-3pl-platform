@@ -55,7 +55,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               The catalog of goods you store and ship for {client.name}.
             </p>
           </div>
-          <CreateProductDialog action={action} />
+          <CreateProductDialog
+            action={action}
+            onCreatedHref={(productId) => `/warehouse/clients/${client!.id}/products/${productId}`}
+          />
         </div>
         {products.length === 0 ? (
           <EmptyState

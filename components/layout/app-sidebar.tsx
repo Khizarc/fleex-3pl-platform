@@ -128,7 +128,7 @@ export function AppSidebar({
             {role ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="bg-muted text-muted-foreground mt-0.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
+                  <span className="text-muted-foreground/80 mt-0.5 inline-block text-[10px] font-medium tracking-wide uppercase">
                     {role}
                   </span>
                 </TooltipTrigger>

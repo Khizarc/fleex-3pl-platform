@@ -91,7 +91,7 @@ export function OnboardingChecklist({
             <li
               key={step.key}
               className={cn(
-                'flex items-center gap-3 rounded-md p-2 transition-colors',
+                'flex items-center gap-3 rounded-md p-2 transition-all duration-150 ease-out',
                 step.done ? 'opacity-60' : 'hover:bg-accent/40',
               )}
             >

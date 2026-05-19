@@ -10,10 +10,13 @@ import { createSkuActionForProduct } from './actions';
 
 export default async function StaffProductDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; productId: string }>;
+  searchParams: Promise<{ addSku?: string }>;
 }) {
   const { id: clientId, productId } = await params;
+  const { addSku } = await searchParams;
   const { tenant } = await getCurrentStaffContext();
 
   const product = await getProduct(tenant, productId);
@@ -43,14 +46,14 @@ export default async function StaffProductDetailPage({
               Variants under this product. Inventory is tracked per SKU.
             </p>
           </div>
-          <CreateSkuDialog action={action} />
+          <CreateSkuDialog action={action} defaultOpen={addSku === '1'} />
         </div>
         {product.skus.length === 0 ? (
           <EmptyState
             icon={Box}
             title="No SKUs yet"
             description="Add the first variant of this product (size, color, style, etc.)."
-            action={<CreateSkuDialog action={action} />}
+            action={<CreateSkuDialog action={action} defaultOpen={addSku === '1'} />}
           />
         ) : (
           <div className="rounded-lg border">

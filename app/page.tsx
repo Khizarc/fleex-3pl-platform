@@ -63,9 +63,9 @@ export default async function LandingPage() {
             <br />
             without the spreadsheet.
           </h1>
-          <p className="text-muted-foreground mx-auto mt-5 max-w-2xl text-lg">
-            Receive inventory, store it in real bins, fulfill orders with personalization, and ship
-            with any carrier — all from one workspace your clients can log into too.
+          <p className="text-muted-foreground mx-auto mt-5 max-w-xl text-lg">
+            Receive, store, and ship inventory for multiple brands — from one workspace they can log
+            into too.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {userId ? (
@@ -113,19 +113,19 @@ export default async function LandingPage() {
               n={1}
               icon={Truck}
               title="Receive"
-              description="Clients notify you of incoming inventory from their portal. Staff check it into bins with scan-to-confirm."
+              description="Clients notify you. Staff scan stock into bins."
             />
             <HowItWorksCard
               n={2}
               icon={Boxes}
               title="Store"
-              description="Real-time inventory across warehouses, aisles, and bins. Stock is reserved when orders submit."
+              description="Real-time inventory by bin. Auto-reserves on order."
             />
             <HowItWorksCard
               n={3}
               icon={Send}
               title="Ship"
-              description="Pick by bin, pack with dimensions and personalization, ship with any carrier — tracking surfaces automatically."
+              description="Pick, pack, ship — every carrier, tracking included."
             />
           </div>
         </div>
@@ -145,23 +145,23 @@ export default async function LandingPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <FeatureCard
               icon={Users}
-              title="Multi-tenant clients"
-              description="Every brand gets their own portal — orders, inventory, products — fully isolated by database-level RLS."
+              title="Multi-tenant"
+              description="Every brand gets its own portal, fully isolated."
             />
             <FeatureCard
               icon={Sparkles}
               title="Personalization"
-              description="Per-line custom fields like engraving text or monogram, captured at order and visible at pack."
+              description="Engraving, monograms — captured at order, visible at pack."
             />
             <FeatureCard
               icon={ClipboardCheck}
               title="Pick / Pack / Ship"
-              description="Three workflows with role gates, queue-driven, every action audit-logged with the staff member who did it."
+              description="Role-gated queues with full audit logging."
             />
             <FeatureCard
               icon={Package}
               title="Real-time inventory"
-              description="Stock levels update on receive, allocate, and pick. Materialized per bin so picking is one trip."
+              description="Stock updates on every receive, allocate, and pick."
             />
           </div>
         </div>
@@ -175,8 +175,7 @@ export default async function LandingPage() {
             Ready to see it in action?
           </h2>
           <p className="text-muted-foreground mx-auto mt-3 max-w-xl text-base">
-            Sign up takes 30 seconds. You can load demo data on your first login to explore a fully
-            populated warehouse before you set up your own.
+            Load demo data on first login to explore a fully populated workspace.
           </p>
           <div className="mt-7">
             {userId ? (

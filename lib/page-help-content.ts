@@ -1,5 +1,5 @@
 // Help content for the `<PageHelp>` drawer. Keys map to PageHeader.helpKey
-// props. Keep prose tight — one or two sentences per section.
+// props. Tight on purpose — one sentence per item, no walls of text.
 
 export type PageHelpContent = {
   title: string;
@@ -13,181 +13,143 @@ export const PAGE_HELP: Record<string, PageHelpContent> = {
   // --- Warehouse shell ---
   'warehouse.dashboard': {
     title: 'Dashboard',
-    whatItIsFor: 'Your daily home base for the warehouse — checklist, KPIs, and attention items.',
+    whatItIsFor: 'Your daily home base — KPIs, checklist, and attention items.',
     howItWorks: [
-      'The onboarding checklist guides first-time setup. It collapses once every step is done.',
-      'KPI cards count active state across your tenant. Click any card to jump to the matching queue.',
-      "Needs attention surfaces orders stuck in AWAITING_STOCK, ON_HOLD, or EXCEPTION — they won't move without action.",
+      'Click any KPI card to jump to its queue.',
+      'Needs attention surfaces stuck orders (AWAITING_STOCK, ON_HOLD, EXCEPTION).',
     ],
-    commonTasks: [
-      'Use Quick actions to start common workflows',
-      'Load demo data to explore the product before setup',
-    ],
+    commonTasks: ['Use Quick actions to start common workflows', 'Load demo data to explore'],
   },
   'warehouse.clients': {
     title: 'Clients',
     whatItIsFor: 'The brands whose goods you store and ship.',
     howItWorks: [
-      'Each client is its own tenant — products, inventory, orders, and portal users are scoped per client.',
-      'You can invite a portal user when you create the client so they can submit orders themselves.',
+      'Each client has its own products, inventory, orders, and portal users.',
+      'Invite a portal user during client creation so they can submit orders themselves.',
     ],
-    commonTasks: [
-      'Add a new client with the "Add client" button',
-      'Click a client row to manage their products, SKUs, and personalization fields',
-    ],
+    commonTasks: ['Add a client', 'Click a row to manage products and personalization'],
   },
   'warehouse.warehouses': {
     title: 'Warehouses',
-    whatItIsFor: 'Physical locations where you receive and store inventory.',
+    whatItIsFor: 'Physical locations where you store inventory.',
     howItWorks: [
-      'Each warehouse contains zones, aisles, and bins — bins are where stock actually lives.',
+      'Each warehouse contains zones, aisles, and bins. Stock lives in bins.',
       'Bin labels (e.g. "A1-01") are what pickers scan-confirm during pick.',
     ],
-    commonTasks: ['Create a warehouse', 'Add zones, aisles, and bins inside a warehouse'],
+    commonTasks: ['Create a warehouse', 'Add zones, aisles, and bins'],
   },
   'warehouse.inbound': {
     title: 'Inbound shipments',
-    whatItIsFor: 'Incoming inventory from clients that staff checks into bins.',
+    whatItIsFor: 'Incoming inventory from clients — staff checks it into bins.',
     howItWorks: [
-      'Clients notify you from their portal. A shipment lands here as NOTIFIED.',
-      'Staff opens it, marks "Start receiving" (NOTIFIED → RECEIVING), and checks in each line with quantity + bin.',
-      'When all lines are received, mark complete — stock becomes available in inventory.',
+      'Clients notify from their portal. Status: NOTIFIED → RECEIVING → COMPLETED.',
+      'Receive each line into a specific bin. Stock becomes available when complete.',
     ],
-    commonTasks: ['Click a shipment to start receiving', 'Receive a line into a specific bin'],
+    commonTasks: ['Start receiving a shipment', 'Receive a line into a bin'],
     related: [
       { label: 'Inventory', href: '/warehouse/inventory' },
-      { label: 'Warehouses (set up bins)', href: '/warehouse/warehouses' },
+      { label: 'Warehouses', href: '/warehouse/warehouses' },
     ],
   },
   'warehouse.inventory': {
     title: 'Inventory',
     whatItIsFor: 'Stock on hand across all clients, summed per SKU.',
     howItWorks: [
-      "Inventory updates automatically — when an inbound is received, stock goes AVAILABLE. When an order's lines allocate, stock moves to RESERVED. When picked, it leaves inventory.",
-      "Damaged goods land in a separate row so they're not pickable.",
+      'AVAILABLE on receive → RESERVED on allocation → leaves on pick.',
+      "Damaged goods are tracked separately and aren't pickable.",
     ],
-    commonTasks: ['Receive an inbound shipment to add stock', 'View per-SKU totals across bins'],
+    commonTasks: ['Receive an inbound to add stock'],
   },
   'warehouse.orders': {
     title: 'Orders',
-    whatItIsFor: 'Outbound orders across all clients — submission through ship.',
+    whatItIsFor: 'Outbound orders — submission through ship.',
     howItWorks: [
-      'Each order has a status from Submitted to Shipped. The timeline on order detail shows where it is.',
-      'Orders submitted with enough stock auto-allocate to bins and move to READY_TO_PICK.',
-      'AWAITING_STOCK means the order tried to allocate but not enough inventory was available.',
+      'Auto-allocates on submit if stock is available; otherwise AWAITING_STOCK.',
+      'Click any order to see its timeline, lines, and activity feed.',
     ],
-    commonTasks: [
-      'Create a new order manually for a client',
-      'Import a CSV of orders',
-      'Open an order to see its timeline, allocations, and assign it',
-    ],
+    commonTasks: ['Create a manual order', 'Import a CSV', 'Open an order to assign it'],
   },
   'warehouse.pick': {
     title: 'Pick queue',
-    whatItIsFor: 'Orders that have been allocated and are ready to pick from bins.',
+    whatItIsFor: 'Orders allocated and ready to pick from bins.',
     howItWorks: [
-      'Each order shows one row per allocation — the per-bin breakdown computed when the order was allocated.',
-      'Pickers scan or type the bin label to confirm each pick. The order flips to PICKED when all rows are done.',
+      'One row per allocation — the per-bin breakdown.',
+      'Scan or type the bin label to confirm each pick.',
     ],
-    commonTasks: ['Click an order to walk its bins', 'Scan-confirm each allocation'],
+    commonTasks: ['Click an order to walk its bins'],
   },
   'warehouse.pack': {
     title: 'Pack queue',
     whatItIsFor: 'Picked orders ready to box up.',
     howItWorks: [
-      'Packers enter box dimensions (length, width, height) in inches and weight in ounces.',
-      'Any personalization values on the order line surface here, so the packer can engrave, monogram, or add gift notes.',
-      'Once submitted, the order flips to PACKED.',
+      'Enter box dimensions in inches and weight in ounces.',
+      'Any personalization values on the order surface here for the packer.',
     ],
-    commonTasks: ['Click an order to enter box dimensions and weight'],
+    commonTasks: ['Click an order to enter box dimensions'],
   },
   'warehouse.ship': {
     title: 'Ship queue',
     whatItIsFor: 'Packed orders ready to hand off to the carrier.',
     howItWorks: [
-      'Pick the carrier (USPS, UPS, FedEx, DHL, or Other) and enter the tracking number after generating the label outside the system. Phase 3 will buy labels inside the app.',
-      "Known carriers render the tracking number as a clickable link to the carrier's tracking page.",
+      'Pick the carrier and enter the tracking number after generating the label.',
+      'Known carriers render tracking numbers as clickable links.',
     ],
-    commonTasks: ['Click an order to record carrier + tracking', 'Mark the order shipped'],
+    commonTasks: ['Record carrier + tracking', 'Mark the order shipped'],
   },
   'warehouse.team': {
     title: 'Team',
-    whatItIsFor: 'Manage staff: invite, change roles, and view all-time productivity.',
+    whatItIsFor: 'Manage staff: invite, change roles, view productivity.',
     howItWorks: [
-      'Invite a staff member by email; they sign up via Clerk and the row is claimed by their email.',
-      'Roles gate which workflows they can perform: PICKER picks, PACKER packs, etc. ADMIN does everything.',
-      "The last active ADMIN can't be disabled or demoted — protects against accidental lockout.",
+      'Invite by email; staff signs up via Clerk and the row is claimed by their email.',
+      "Roles gate which workflows they can perform. Last active ADMIN can't be removed.",
     ],
-    commonTasks: [
-      'Invite a new staff member',
-      "Change a user's role or suspend them",
-      'See per-staff inbound / picks / packs / ships counts',
-    ],
+    commonTasks: ['Invite a staff member', 'Change role or status'],
   },
   'warehouse.personalization': {
     title: 'Personalization',
-    whatItIsFor: 'Per-client custom fields captured on every order line.',
+    whatItIsFor: 'Per-client custom fields on every order line.',
     howItWorks: [
-      'Define fields like "engraving" or "monogram" — text only.',
-      'When an order line is submitted for this client, every active field appears as an input. Required fields block submission.',
-      'Disabled fields stop appearing on new orders but historical values are preserved.',
+      'Define fields like "engraving" — text only.',
+      'Required fields block order submission. Disabled fields hide on new orders but historical values remain.',
     ],
-    commonTasks: ['Add a new field with a key + label', 'Disable a field you no longer use'],
+    commonTasks: ['Add a field', 'Disable an unused field'],
   },
   'warehouse.order-detail': {
     title: 'Order detail',
-    whatItIsFor: 'See everything about one order — status, timeline, lines, assignment, shipping.',
+    whatItIsFor: 'Status, timeline, lines, assignment, shipping — one view.',
     howItWorks: [
-      "The status timeline at the top shows where the order is and what's next.",
-      'The activity feed below lists every event with the staff member who did it.',
-      'ADMINs can assign the order to a specific staff member as a hint to workers (not a hard fence).',
+      "The timeline shows where the order is and what's next.",
+      'Activity feed lists every event with the staff member who did it.',
     ],
-    commonTasks: [
-      'Try allocation if the order is SUBMITTED',
-      'Cancel the order before pick starts',
-    ],
+    commonTasks: ['Try allocation if SUBMITTED', 'Cancel before pick starts'],
   },
 
   // --- Portal shell ---
   'portal.dashboard': {
     title: 'Dashboard',
-    whatItIsFor: 'Your overview of in-flight orders, inventory, and quick actions.',
-    howItWorks: [
-      'KPI cards count your active orders, SKUs, pending inbounds, and any orders awaiting stock.',
-      'Recent orders show your last 5 — click to see status.',
-    ],
-    commonTasks: ['Submit a new order', 'Notify your 3PL of incoming inventory', 'Check inventory'],
+    whatItIsFor: 'Overview of in-flight orders, inventory, and quick actions.',
+    howItWorks: ['KPI cards count your active orders, SKUs, and pending inbounds.'],
+    commonTasks: ['Submit an order', 'Notify your 3PL of incoming stock'],
   },
   'portal.products': {
     title: 'Products',
-    whatItIsFor: 'Your catalog of products and SKU variants.',
-    howItWorks: [
-      'Each product can have many SKU variants (size, color, style).',
-      'Inventory is tracked per SKU, not per product.',
-    ],
-    commonTasks: ['Add a product', 'Add SKU variants under a product'],
+    whatItIsFor: 'Your catalog and SKU variants.',
+    howItWorks: ['Each product can have many SKU variants. Inventory tracks per SKU.'],
+    commonTasks: ['Add a product', 'Add SKU variants'],
   },
   'portal.inbound': {
     title: 'Inbound shipments',
-    whatItIsFor: 'Notify your 3PL when stock is on its way so they can prepare to receive it.',
-    howItWorks: [
-      "A notification lands in your 3PL's queue as NOTIFIED.",
-      'When they start checking it in it becomes RECEIVING; when done, COMPLETED.',
-    ],
+    whatItIsFor: 'Tell your 3PL when stock is on the way.',
+    howItWorks: ['Status: NOTIFIED → RECEIVING → COMPLETED.'],
     commonTasks: ['Click "Notify of incoming" to start one'],
   },
   'portal.orders': {
     title: 'Orders',
-    whatItIsFor: 'Outbound shipments your 3PL is fulfilling for you.',
+    whatItIsFor: 'Outbound shipments your 3PL is fulfilling.',
     howItWorks: [
-      'Submit an order with a ship-to address, lines (SKU + quantity), and any personalization values.',
-      'If stock is available, the order auto-allocates and progresses through pick → pack → ship.',
-      "If stock isn't available it goes to AWAITING_STOCK and waits for the next inbound.",
+      'Submit with ship-to, lines, and personalization values.',
+      'Auto-allocates if stock is available; otherwise AWAITING_STOCK.',
     ],
-    commonTasks: [
-      'Submit a new order',
-      'Import a CSV of orders',
-      'Track a shipped order via tracking link',
-    ],
+    commonTasks: ['Submit an order', 'Import a CSV', 'Track via tracking link'],
   },
 };

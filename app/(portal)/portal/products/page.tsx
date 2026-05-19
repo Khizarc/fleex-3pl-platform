@@ -18,7 +18,12 @@ export default async function PortalProductsPage() {
       <PageHeader
         title="Products"
         description={`${client.name}'s product catalog. Add SKU variants under each product to track inventory.`}
-        action={<CreateProductDialog action={createProductAction} />}
+        action={
+          <CreateProductDialog
+            action={createProductAction}
+            onCreatedHref={(productId) => `/portal/products/${productId}`}
+          />
+        }
         helpKey="portal.products"
       />
 
@@ -27,7 +32,12 @@ export default async function PortalProductsPage() {
           icon={Package}
           title="No products yet"
           description="Add your first product to start defining your catalog. SKUs come next."
-          action={<CreateProductDialog action={createProductAction} />}
+          action={
+            <CreateProductDialog
+              action={createProductAction}
+              onCreatedHref={(productId) => `/portal/products/${productId}`}
+            />
+          }
         />
       ) : (
         <div className="rounded-lg border">

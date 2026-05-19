@@ -27,8 +27,7 @@ export function DemoDataBanner() {
       <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200">
         <Sparkles className="size-4" />
         <span>
-          <strong>Demo data is loaded.</strong> Explore the order pipeline, then reset when
-          you&apos;re ready to set up for real.
+          <strong>Demo data loaded.</strong> Explore freely — reset when you&apos;re ready.
         </span>
       </div>
       <ConfirmDialog

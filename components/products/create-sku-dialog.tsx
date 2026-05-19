@@ -31,11 +31,15 @@ type ActionResult = { ok: true; data: { id: string } } | { ok: false; error: str
 
 export function CreateSkuDialog({
   action,
+  defaultOpen = false,
 }: {
   action: (input: CreateSkuInput) => Promise<ActionResult>;
+  /** Open on mount — used when the product was just created and we want the
+   * SKU dialog to appear without an extra click. */
+  defaultOpen?: boolean;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [pending, startTransition] = useTransition();
 
   const form = useForm<CreateSkuInput>({
@@ -47,7 +51,15 @@ export function CreateSkuDialog({
     startTransition(async () => {
       const result = await action(values);
       if (result.ok) {
-        toast.success('SKU created');
+        toast.success('SKU created', {
+          action: {
+            label: 'Add another',
+            onClick: () => {
+              form.reset();
+              setOpen(true);
+            },
+          },
+        });
         form.reset();
         setOpen(false);
         router.refresh();

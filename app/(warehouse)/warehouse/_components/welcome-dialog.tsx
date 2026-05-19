@@ -8,11 +8,9 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { loadDemoDataAction } from '../actions';
 
 const STORAGE_KEY = 'fleex.welcome-dismissed';
@@ -73,32 +71,25 @@ export function WelcomeDialog({
           <button
             onClick={onLoadDemo}
             disabled={pending}
-            className="hover:bg-accent/40 rounded-lg border p-4 text-left transition-colors disabled:opacity-60"
+            className="hover:bg-accent/40 hover:border-foreground/15 cursor-pointer rounded-lg border p-4 text-left transition-all duration-150 ease-out hover:-translate-y-px hover:shadow-md disabled:opacity-60"
           >
             <Sparkles className="text-muted-foreground mb-2 size-5" />
             <p className="font-medium">Load demo data</p>
             <p className="text-muted-foreground mt-1 text-xs">
-              Populate a sample warehouse, client, products, inbound, and order so you can try every
-              workflow without setting up first.
+              A populated workspace to try every workflow.
             </p>
           </button>
           <button
             onClick={dismiss}
-            className="hover:bg-accent/40 rounded-lg border p-4 text-left transition-colors"
+            className="hover:bg-accent/40 hover:border-foreground/15 cursor-pointer rounded-lg border p-4 text-left transition-all duration-150 ease-out hover:-translate-y-px hover:shadow-md"
           >
             <Wrench className="text-muted-foreground mb-2 size-5" />
             <p className="font-medium">Set up manually</p>
             <p className="text-muted-foreground mt-1 text-xs">
-              Walk the 5-step onboarding checklist on the dashboard — create your first warehouse,
-              client, product, and inbound.
+              Walk the 5-step checklist on the dashboard.
             </p>
           </button>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" size="sm" onClick={dismiss} disabled={pending}>
-            I&apos;ll decide later
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

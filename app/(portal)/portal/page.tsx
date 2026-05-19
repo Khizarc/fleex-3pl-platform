@@ -24,7 +24,7 @@ export default async function PortalHomePage() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+        <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
           At a glance
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -63,7 +63,7 @@ export default async function PortalHomePage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+            <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
               Recent orders
             </h2>
             <Link
@@ -85,7 +85,7 @@ export default async function PortalHomePage() {
                   <li key={row.id}>
                     <Link
                       href={`/portal/orders/${row.id}`}
-                      className="hover:bg-accent/40 flex items-center justify-between gap-3 p-3"
+                      className="hover:bg-accent/40 flex items-center justify-between gap-3 p-3 transition-colors"
                     >
                       <div>
                         <p className="text-sm font-medium">
@@ -105,7 +105,7 @@ export default async function PortalHomePage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+          <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Quick actions
           </h2>
           <div className="space-y-2">

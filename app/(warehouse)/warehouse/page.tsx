@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   Boxes,
   ClipboardCheck,
-  Package,
   Plus,
   Send,
   ShoppingBag,
@@ -43,7 +42,9 @@ export default async function WarehouseHomePage() {
       if (role === 'RECEIVER') {
         return tx.inboundShipment.count({
           where: {
-            status: { in: ROLE_TO_STATUS.RECEIVER as unknown as ('NOTIFIED' | 'RECEIVING')[] },
+            status: {
+              in: ROLE_TO_STATUS.RECEIVER as unknown as ('NOTIFIED' | 'RECEIVING')[],
+            },
           },
         });
       }
@@ -68,41 +69,42 @@ export default async function WarehouseHomePage() {
     {
       key: 'warehouse',
       label: 'Create a warehouse',
-      description: 'Add your first warehouse with aisles, zones, and bins.',
+      description: 'Zones, aisles, and bins.',
       href: '/warehouse/warehouses',
       done: progress.warehouseCreated,
     },
     {
       key: 'client',
       label: 'Add a client',
-      description: 'The brand whose goods you store and ship.',
+      description: 'The brand whose goods you ship.',
       href: '/warehouse/clients',
       done: progress.clientCreated,
     },
     {
       key: 'sku',
       label: 'Add a product and SKU',
-      description: 'Each product needs at least one SKU variant to track stock.',
+      description: 'Variants you track inventory for.',
       href: '/warehouse/clients',
       done: progress.skuCreated,
     },
     {
       key: 'clientUser',
       label: 'Invite a client portal user',
-      description: 'Give the client a login so they can submit orders themselves.',
+      description: 'So the client can submit orders.',
       href: '/warehouse/clients',
       done: progress.clientUserInvited,
     },
     {
       key: 'inbound',
-      label: 'Receive your first inbound shipment',
-      description: 'Clients notify of incoming stock; staff receives it into bins.',
+      label: 'Receive your first inbound',
+      description: 'Check in stock into bins.',
       href: '/warehouse/inbound-shipments',
       done: progress.inboundReceived,
     },
   ];
 
   const isFreshCompany = !steps.some((s) => s.done);
+  const onboardingComplete = steps.every((s) => s.done);
 
   return (
     <div className="space-y-6">
@@ -112,7 +114,7 @@ export default async function WarehouseHomePage() {
           Welcome back, {user.name.split(' ')[0]}.
         </h1>
         <p className="text-muted-foreground text-sm">
-          Here&apos;s what&apos;s happening across your warehouse today.
+          What&apos;s happening across your warehouse today.
         </p>
       </div>
 
@@ -122,10 +124,9 @@ export default async function WarehouseHomePage() {
         <Card className="bg-muted/30">
           <div className="flex flex-wrap items-center justify-between gap-3 p-4">
             <div>
-              <p className="font-medium">Want to explore the product first?</p>
+              <p className="font-medium">Explore with demo data first?</p>
               <p className="text-muted-foreground text-sm">
-                Load a fully populated demo workspace so you can try every workflow without setting
-                up.
+                A fully populated workspace — try every workflow in one click.
               </p>
             </div>
             <LoadDemoButton />
@@ -133,42 +134,8 @@ export default async function WarehouseHomePage() {
         </Card>
       ) : null}
 
-      <OnboardingChecklist steps={steps} />
-
       <section className="space-y-3">
-        <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
-          Quick actions
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickAction
-            href="/warehouse/orders/new"
-            icon={Plus}
-            label="Create order"
-            hint="Phone or manual order on behalf of a client."
-          />
-          <QuickAction
-            href="/warehouse/inbound-shipments"
-            icon={Truck}
-            label="Receive shipment"
-            hint="Check in stock from an inbound shipment."
-          />
-          <QuickAction
-            href="/warehouse/clients"
-            icon={Boxes}
-            label="Manage clients"
-            hint="Products, SKUs, personalization, and portal users."
-          />
-          <QuickAction
-            href="/warehouse/warehouses"
-            icon={Warehouse}
-            label="Manage warehouses"
-            hint="Zones, aisles, and bins."
-          />
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+        <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
           At a glance
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -197,15 +164,49 @@ export default async function WarehouseHomePage() {
             icon={Send}
             label="Ready to ship"
             value={dashboard.kpis.readyToShip}
-            hint="Packed and waiting on label"
+            hint="Packed, awaiting label"
             href="/warehouse/ship"
+          />
+        </div>
+      </section>
+
+      {!onboardingComplete ? <OnboardingChecklist steps={steps} /> : null}
+
+      <section className="space-y-3">
+        <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+          Quick actions
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <QuickAction
+            href="/warehouse/orders/new"
+            icon={Plus}
+            label="Create order"
+            hint="Manual entry for a client."
+          />
+          <QuickAction
+            href="/warehouse/inbound-shipments"
+            icon={Truck}
+            label="Receive shipment"
+            hint="Check in incoming stock."
+          />
+          <QuickAction
+            href="/warehouse/clients"
+            icon={Boxes}
+            label="Manage clients"
+            hint="Products, SKUs, portal users."
+          />
+          <QuickAction
+            href="/warehouse/warehouses"
+            icon={Warehouse}
+            label="Manage warehouses"
+            hint="Zones, aisles, and bins."
           />
         </div>
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="space-y-3">
-          <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+          <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Needs attention
           </h2>
           <Card>
@@ -220,7 +221,7 @@ export default async function WarehouseHomePage() {
                   <li key={row.id}>
                     <Link
                       href={`/warehouse/orders/${row.id}`}
-                      className="hover:bg-accent/40 flex items-center justify-between gap-3 p-3"
+                      className="hover:bg-accent/40 group flex items-center justify-between gap-3 p-3 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="size-4 text-amber-500" />
@@ -241,44 +242,29 @@ export default async function WarehouseHomePage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+          <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Today&apos;s activity
           </h2>
           <Card>
             <div className="grid grid-cols-3 divide-x">
-              <div className="p-4 text-center">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                  Picked
-                </p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums">
-                  {dashboard.todayActivity.picked}
-                </p>
-              </div>
-              <div className="p-4 text-center">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                  Packed
-                </p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums">
-                  {dashboard.todayActivity.packed}
-                </p>
-              </div>
-              <div className="p-4 text-center">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                  Shipped
-                </p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums">
-                  {dashboard.todayActivity.shipped}
-                </p>
-              </div>
+              {(
+                [
+                  ['Picked', dashboard.todayActivity.picked],
+                  ['Packed', dashboard.todayActivity.packed],
+                  ['Shipped', dashboard.todayActivity.shipped],
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label} className="p-4 text-center">
+                  <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                    {label}
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
+                </div>
+              ))}
             </div>
           </Card>
         </section>
       </div>
-
-      <p className="text-muted-foreground text-xs">
-        <Package className="mr-1 inline size-3" />
-        Need a refresher? Open the sidebar to jump to any operation.
-      </p>
     </div>
   );
 }

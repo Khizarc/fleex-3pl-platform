@@ -10,10 +10,13 @@ import { createSkuActionForPortal } from './actions';
 
 export default async function PortalProductDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ productId: string }>;
+  searchParams: Promise<{ addSku?: string }>;
 }) {
   const { productId } = await params;
+  const { addSku } = await searchParams;
   const { tenant } = await getCurrentClientContext();
 
   // RLS filters the product — if it belongs to another client, this returns
@@ -45,14 +48,14 @@ export default async function PortalProductDetailPage({
               Variants under this product (size, color, etc.).
             </p>
           </div>
-          <CreateSkuDialog action={action} />
+          <CreateSkuDialog action={action} defaultOpen={addSku === '1'} />
         </div>
         {product.skus.length === 0 ? (
           <EmptyState
             icon={Box}
             title="No SKUs yet"
             description="Add the first variant of this product."
-            action={<CreateSkuDialog action={action} />}
+            action={<CreateSkuDialog action={action} defaultOpen={addSku === '1'} />}
           />
         ) : (
           <div className="rounded-lg border">
