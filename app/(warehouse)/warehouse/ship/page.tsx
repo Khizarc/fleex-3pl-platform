@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Send } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import {
   Table,
   TableBody,
@@ -19,13 +20,11 @@ export default async function ShipQueuePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Ship queue</h1>
-        <p className="text-muted-foreground text-sm">
-          Packed orders ready to hand off to the carrier. Click an order to enter the carrier and
-          tracking number.
-        </p>
-      </div>
+      <PageHeader
+        title="Ship queue"
+        description="Packed orders ready to hand off to the carrier. Click an order to record the carrier, tracking number, and any ship notes."
+        helpKey="warehouse.ship"
+      />
 
       {queue.length === 0 ? (
         <EmptyState

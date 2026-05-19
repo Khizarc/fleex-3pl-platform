@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Truck } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import {
   Table,
   TableBody,
@@ -19,18 +20,17 @@ export default async function StaffInboundShipmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Inbound shipments</h1>
-        <p className="text-muted-foreground text-sm">
-          Incoming inventory from clients. Click into a shipment to check it in.
-        </p>
-      </div>
+      <PageHeader
+        title="Inbound shipments"
+        description="Incoming inventory from clients. Click a shipment to start receiving it into bins."
+        helpKey="warehouse.inbound"
+      />
 
       {shipments.length === 0 ? (
         <EmptyState
           icon={Truck}
           title="No inbound shipments yet"
-          description="Clients will appear here when they notify you of incoming inventory."
+          description="Clients notify you of incoming inventory from their portal — shipments will appear here for receiving."
         />
       ) : (
         <div className="rounded-lg border">

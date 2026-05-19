@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft, Package, Sparkles } from 'lucide-react';
+import { Package, Sparkles } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { ProductsTable } from '@/components/products/products-table';
 import { CreateProductDialog } from '@/components/products/create-product-dialog';
 import { Button } from '@/components/ui/button';
@@ -31,27 +32,20 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <Link
-          href="/warehouse/clients"
-          className="text-muted-foreground inline-flex items-center text-sm hover:underline"
-        >
-          <ChevronLeft className="size-4" />
-          All clients
-        </Link>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
-            <p className="text-muted-foreground text-sm">A client of your 3PL.</p>
-          </div>
+      <PageHeader
+        title={client.name}
+        description="Manage this client's products, SKUs, and personalization fields."
+        backHref="/warehouse/clients"
+        backLabel="All clients"
+        action={
           <Button asChild variant="outline" size="sm">
             <Link href={`/warehouse/clients/${client.id}/personalization`}>
               <Sparkles className="size-4" />
               Personalization
             </Link>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -68,6 +62,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             icon={Package}
             title="No products yet"
             description={`Add ${client.name}'s first product. You'll add SKU variants after.`}
+            action={<CreateProductDialog action={action} />}
           />
         ) : (
           <div className="rounded-lg border">

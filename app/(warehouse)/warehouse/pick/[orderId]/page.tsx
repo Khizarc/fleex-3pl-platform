@@ -1,8 +1,7 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
 import { OrderStatus } from '@prisma/client';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
+import { PageHeader } from '@/components/page-header';
 import { getPickList } from '@/features/orders';
 import { getCurrentStaffContext } from '@/lib/auth';
 import { PickRow } from './_components/pick-row';
@@ -19,31 +18,22 @@ export default async function PickOrderPage({ params }: { params: Promise<{ orde
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Link
-          href="/warehouse/pick"
-          className="text-muted-foreground inline-flex items-center text-sm hover:underline"
-        >
-          <ChevronLeft className="size-4" />
-          Pick queue
-        </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{order.reference}</h1>
-            <p className="text-muted-foreground text-sm">
-              <strong>{order.client.name}</strong> · Ship to {order.shipToCity},{' '}
-              {order.shipToRegion} {order.shipToPostalCode}
-              {order.customerNote ? ` · Note: ${order.customerNote}` : null}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+      <PageHeader
+        title={order.reference}
+        description={`${order.client.name} · Ship to ${order.shipToCity}, ${order.shipToRegion} ${order.shipToPostalCode}${
+          order.customerNote ? ` · Note: ${order.customerNote}` : ''
+        }`}
+        backHref="/warehouse/pick"
+        backLabel="Pick queue"
+        action={
+          <>
             <span className="text-muted-foreground text-sm">
               {pickedAllocations} / {totalAllocations}
             </span>
             <OrderStatusBadge status={order.status} />
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {order.status === OrderStatus.PICKED ? (
         <div className="rounded-md border border-green-300 bg-green-50 p-4 text-sm dark:border-green-700 dark:bg-green-950">

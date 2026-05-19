@@ -6,6 +6,7 @@ export { allocateOrder } from './services/allocate-order';
 export { cancelOrder } from './services/cancel-order';
 export { listOrders, type OrderListRow } from './services/list-orders';
 export { getOrder } from './services/get-order';
+export { getOrderActivity, type OrderActivityEvent } from './services/get-order-activity';
 export { bulkCreateOrders, type BulkCreateOrdersResult } from './services/bulk-create-orders';
 export {
   pickAllocation,

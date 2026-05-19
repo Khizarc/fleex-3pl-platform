@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ClipboardCheck } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import {
   Table,
   TableBody,
@@ -13,25 +14,42 @@ import { Badge } from '@/components/ui/badge';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
 import { listPickQueue } from '@/features/orders';
 import { getCurrentStaffContext } from '@/lib/auth';
+import { withTenantContext } from '@/lib/db';
+import { Button } from '@/components/ui/button';
 
 export default async function PickQueuePage() {
   const { tenant } = await getCurrentStaffContext();
-  const queue = await listPickQueue(tenant);
+  const [queue, upstreamCount] = await Promise.all([
+    listPickQueue(tenant),
+    withTenantContext(tenant, async (tx) =>
+      tx.order.count({ where: { status: { in: ['SUBMITTED', 'AWAITING_STOCK'] } } }),
+    ),
+  ]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Pick queue</h1>
-        <p className="text-muted-foreground text-sm">
-          Orders awaiting pick or in progress, oldest first. Click an order to walk its bins.
-        </p>
-      </div>
+      <PageHeader
+        title="Pick queue"
+        description="Orders awaiting pick or in progress, oldest first. Click an order to walk its bins and scan-confirm each allocation."
+        helpKey="warehouse.pick"
+      />
 
       {queue.length === 0 ? (
         <EmptyState
           icon={ClipboardCheck}
           title="No orders waiting"
-          description="When a client places an order and it allocates, it shows up here."
+          description={
+            upstreamCount > 0
+              ? `Nothing ready to pick yet — but ${upstreamCount} order${upstreamCount === 1 ? ' is' : 's are'} waiting on allocation. They'll show up here once stock is reserved.`
+              : 'When a client places an order and it allocates, it shows up here.'
+          }
+          action={
+            upstreamCount > 0 ? (
+              <Button asChild>
+                <Link href="/warehouse/orders">View pending orders</Link>
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="rounded-lg border">

@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { PageHeader } from '@/components/page-header';
 import { listStaff } from '@/features/team';
 import { getCurrentStaffContext } from '@/lib/auth';
 import { InviteStaffDialog } from './_components/invite-staff-dialog';
@@ -31,15 +32,12 @@ export default async function TeamPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Team</h1>
-          <p className="text-muted-foreground text-sm">
-            Manage staff roles, status, and view all-time productivity counts.
-          </p>
-        </div>
-        <InviteStaffDialog />
-      </div>
+      <PageHeader
+        title="Team"
+        description="Manage staff roles, status, and view all-time productivity counts. Invited staff sign up via Clerk and are claimed by email."
+        action={<InviteStaffDialog />}
+        helpKey="warehouse.team"
+      />
 
       <div className="rounded-lg border">
         <Table>

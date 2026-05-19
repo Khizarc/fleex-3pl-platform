@@ -1,6 +1,4 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
 import { OrderStatus } from '@prisma/client';
 import {
   Table,
@@ -11,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
+import { PageHeader } from '@/components/page-header';
 import { getOrder, mmToInches, gramsToOunces } from '@/features/orders';
 import { getCurrentStaffContext } from '@/lib/auth';
 import { ShipForm } from './_components/ship-form';
@@ -25,26 +24,15 @@ export default async function ShipOrderPage({ params }: { params: Promise<{ orde
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Link
-          href="/warehouse/ship"
-          className="text-muted-foreground inline-flex items-center text-sm hover:underline"
-        >
-          <ChevronLeft className="size-4" />
-          Ship queue
-        </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{order.reference}</h1>
-            <p className="text-muted-foreground text-sm">
-              <strong>{order.client.name}</strong> · Ship to {order.shipToName}, {order.shipToCity}{' '}
-              {order.shipToRegion}
-              {order.customerNote ? ` · Note: ${order.customerNote}` : null}
-            </p>
-          </div>
-          <OrderStatusBadge status={order.status} />
-        </div>
-      </div>
+      <PageHeader
+        title={order.reference}
+        description={`${order.client.name} · Ship to ${order.shipToName}, ${order.shipToCity} ${order.shipToRegion}${
+          order.customerNote ? ` · Note: ${order.customerNote}` : ''
+        }`}
+        backHref="/warehouse/ship"
+        backLabel="Ship queue"
+        action={<OrderStatusBadge status={order.status} />}
+      />
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Box + contents</h2>

@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft, Box } from 'lucide-react';
+import { Box } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { SkusTable } from '@/components/products/skus-table';
 import { CreateSkuDialog } from '@/components/products/create-sku-dialog';
 import { getProduct, type CreateSkuInput } from '@/features/products';
@@ -26,21 +26,14 @@ export default async function StaffProductDetailPage({
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <Link
-          href={`/warehouse/clients/${clientId}`}
-          className="text-muted-foreground inline-flex items-center text-sm hover:underline"
-        >
-          <ChevronLeft className="size-4" />
-          Back to client
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{product.name}</h1>
-          {product.description ? (
-            <p className="text-muted-foreground text-sm">{product.description}</p>
-          ) : null}
-        </div>
-      </div>
+      <PageHeader
+        title={product.name}
+        description={
+          product.description ?? 'Add SKU variants to track inventory under this product.'
+        }
+        backHref={`/warehouse/clients/${clientId}`}
+        backLabel="Back to client"
+      />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -57,6 +50,7 @@ export default async function StaffProductDetailPage({
             icon={Box}
             title="No SKUs yet"
             description="Add the first variant of this product (size, color, style, etc.)."
+            action={<CreateSkuDialog action={action} />}
           />
         ) : (
           <div className="rounded-lg border">

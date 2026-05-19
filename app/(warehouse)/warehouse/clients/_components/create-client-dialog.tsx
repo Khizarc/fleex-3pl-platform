@@ -81,9 +81,11 @@ export function CreateClientDialog() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client name</FormLabel>
+                  <FormLabel>
+                    Client name <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Acme Co." {...field} />
+                    <Input placeholder="Acme Co." autoFocus {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

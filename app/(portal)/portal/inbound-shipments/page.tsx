@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Plus, Truck } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -20,26 +21,33 @@ export default async function PortalInboundShipmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Inbound shipments</h1>
-          <p className="text-muted-foreground text-sm">
-            Notify your 3PL when inventory is on its way.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/portal/inbound-shipments/new">
-            <Plus className="size-4" />
-            Notify of incoming
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Inbound shipments"
+        description="Notify your 3PL when inventory is on the way so they can prepare to receive it."
+        helpKey="portal.inbound"
+        action={
+          <Button asChild>
+            <Link href="/portal/inbound-shipments/new">
+              <Plus className="size-4" />
+              Notify of incoming
+            </Link>
+          </Button>
+        }
+      />
 
       {shipments.length === 0 ? (
         <EmptyState
           icon={Truck}
           title="No inbound shipments yet"
-          description="Click 'Notify of incoming' to tell your 3PL what's on the way."
+          description="Tell your 3PL what's on the way — SKU, quantity, expected arrival."
+          action={
+            <Button asChild>
+              <Link href="/portal/inbound-shipments/new">
+                <Plus className="size-4" />
+                Notify of incoming
+              </Link>
+            </Button>
+          }
         />
       ) : (
         <div className="rounded-lg border">

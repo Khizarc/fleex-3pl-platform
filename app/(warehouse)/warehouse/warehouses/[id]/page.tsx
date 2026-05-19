@@ -1,6 +1,5 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 import {
   Table,
   TableBody,
@@ -35,21 +34,12 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <Link
-          href="/warehouse/warehouses"
-          className="text-muted-foreground inline-flex items-center text-sm hover:underline"
-        >
-          <ChevronLeft className="size-4" />
-          All warehouses
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{warehouse.name}</h1>
-          {warehouse.address ? (
-            <p className="text-muted-foreground text-sm">{warehouse.address}</p>
-          ) : null}
-        </div>
-      </div>
+      <PageHeader
+        title={warehouse.name}
+        description={warehouse.address ?? 'Organize this warehouse into zones, aisles, and bins.'}
+        backHref="/warehouse/warehouses"
+        backLabel="All warehouses"
+      />
 
       <Section
         title="Zones"

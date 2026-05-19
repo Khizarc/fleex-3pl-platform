@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { listClients } from '@/features/clients';
 import { getCurrentStaffContext } from '@/lib/auth';
 import { ClientsTable } from './_components/clients-table';
@@ -11,21 +12,19 @@ export default async function ClientsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Clients</h1>
-          <p className="text-muted-foreground text-sm">
-            The customers your 3PL warehouses goods for.
-          </p>
-        </div>
-        <CreateClientDialog />
-      </div>
+      <PageHeader
+        title="Clients"
+        description="The brands you store and ship goods for. Each client has its own products, inventory, and orders."
+        action={<CreateClientDialog />}
+        helpKey="warehouse.clients"
+      />
 
       {clients.length === 0 ? (
         <EmptyState
           icon={Users}
           title="No clients yet"
           description="Add your first client to start receiving inventory and fulfilling orders."
+          action={<CreateClientDialog />}
         />
       ) : (
         <div className="rounded-lg border">

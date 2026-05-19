@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { FileUp, Plus, ShoppingBag } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -20,34 +21,41 @@ export default async function PortalOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground text-sm">
-            Outbound shipments your 3PL is fulfilling.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
-            <Link href="/portal/orders/import">
-              <FileUp className="size-4" />
-              Import CSV
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/portal/orders/new">
-              <Plus className="size-4" />
-              New order
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Orders"
+        description="Outbound shipments your 3PL is fulfilling. Click an order to see its status timeline and details."
+        helpKey="portal.orders"
+        action={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/portal/orders/import">
+                <FileUp className="size-4" />
+                Import CSV
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/portal/orders/new">
+                <Plus className="size-4" />
+                New order
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
       {orders.length === 0 ? (
         <EmptyState
           icon={ShoppingBag}
           title="No orders yet"
-          description="Click 'New order' to send an outbound shipment to your 3PL."
+          description="Send an outbound shipment to your 3PL — ship-to address, lines, and any personalization."
+          action={
+            <Button asChild>
+              <Link href="/portal/orders/new">
+                <Plus className="size-4" />
+                New order
+              </Link>
+            </Button>
+          }
         />
       ) : (
         <div className="rounded-lg border">

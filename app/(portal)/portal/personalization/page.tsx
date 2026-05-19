@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { CreatePersonalizationFieldDialog } from '@/components/personalization/create-field-dialog';
 import { PersonalizationFieldsTable } from '@/components/personalization/fields-table';
 import { listPersonalizationFields } from '@/features/personalization';
@@ -16,22 +17,18 @@ export default async function PortalPersonalizationPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Personalization</h1>
-          <p className="text-muted-foreground text-sm">
-            {client.name}&apos;s per-line custom fields. Captured on each order line and visible at
-            pack time.
-          </p>
-        </div>
-        <CreatePersonalizationFieldDialog action={createPersonalizationFieldAction} />
-      </div>
+      <PageHeader
+        title="Personalization"
+        description={`${client.name}'s per-line custom fields. Captured on each order line and visible to staff at pack time.`}
+        action={<CreatePersonalizationFieldDialog action={createPersonalizationFieldAction} />}
+      />
 
       {fields.length === 0 ? (
         <EmptyState
           icon={Sparkles}
           title="No personalization fields yet"
           description="Define fields like engraving text, monogram, or gift note. Values appear on every order line."
+          action={<CreatePersonalizationFieldDialog action={createPersonalizationFieldAction} />}
         />
       ) : (
         <PersonalizationFieldsTable

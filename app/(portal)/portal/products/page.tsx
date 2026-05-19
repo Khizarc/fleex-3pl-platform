@@ -1,5 +1,6 @@
 import { Package } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { ProductsTable } from '@/components/products/products-table';
 import { CreateProductDialog } from '@/components/products/create-product-dialog';
 import { listProducts } from '@/features/products';
@@ -14,21 +15,19 @@ export default async function PortalProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
-          <p className="text-muted-foreground text-sm">
-            {client.name}&apos;s product catalog. Add SKU variants under each product.
-          </p>
-        </div>
-        <CreateProductDialog action={createProductAction} />
-      </div>
+      <PageHeader
+        title="Products"
+        description={`${client.name}'s product catalog. Add SKU variants under each product to track inventory.`}
+        action={<CreateProductDialog action={createProductAction} />}
+        helpKey="portal.products"
+      />
 
       {products.length === 0 ? (
         <EmptyState
           icon={Package}
           title="No products yet"
-          description="Add your first product to start defining your catalog."
+          description="Add your first product to start defining your catalog. SKUs come next."
+          action={<CreateProductDialog action={createProductAction} />}
         />
       ) : (
         <div className="rounded-lg border">

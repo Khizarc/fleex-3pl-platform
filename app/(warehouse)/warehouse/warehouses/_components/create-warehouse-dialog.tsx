@@ -75,9 +75,11 @@ export function CreateWarehouseDialog() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>
+                    Name <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Main DC" {...field} />
+                    <Input placeholder="Main DC" autoFocus {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

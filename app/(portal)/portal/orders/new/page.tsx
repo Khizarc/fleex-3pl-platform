@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 import { getCurrentClientContext } from '@/lib/auth';
 import { withTenantContext } from '@/lib/db';
 import { listActivePersonalizationFields } from '@/features/personalization';
@@ -28,21 +27,12 @@ export default async function NewOrderPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="space-y-2">
-        <Link
-          href="/portal/orders"
-          className="text-muted-foreground inline-flex items-center text-sm hover:underline"
-        >
-          <ChevronLeft className="size-4" />
-          All orders
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">New order</h1>
-          <p className="text-muted-foreground text-sm">
-            Tell your 3PL where to ship, what to ship, and how much.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="New order"
+        description="Tell your 3PL where to ship, what to ship, and how much. Personalization fields appear automatically on each line."
+        backHref="/portal/orders"
+        backLabel="All orders"
+      />
 
       <CreateOrderForm skus={skus} definitions={definitions} />
     </div>

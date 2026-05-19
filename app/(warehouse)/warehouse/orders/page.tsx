@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { FileUp, Plus, ShoppingBag } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -20,34 +21,41 @@ export default async function WarehouseOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground text-sm">
-            Outbound orders across all clients in this company.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
-            <Link href="/warehouse/orders/import">
-              <FileUp className="size-4" />
-              Import CSV
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/warehouse/orders/new">
-              <Plus className="size-4" />
-              New order
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Orders"
+        description="Outbound orders across all clients. Click an order to see its status timeline, lines, and assignment."
+        helpKey="warehouse.orders"
+        action={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/warehouse/orders/import">
+                <FileUp className="size-4" />
+                Import CSV
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/warehouse/orders/new">
+                <Plus className="size-4" />
+                New order
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
       {orders.length === 0 ? (
         <EmptyState
           icon={ShoppingBag}
           title="No orders yet"
-          description="Orders placed by clients or created by staff will appear here."
+          description="Orders placed by clients or created by staff will appear here. Create your first one to get started."
+          action={
+            <Button asChild>
+              <Link href="/warehouse/orders/new">
+                <Plus className="size-4" />
+                New order
+              </Link>
+            </Button>
+          }
         />
       ) : (
         <div className="rounded-lg border">

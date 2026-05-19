@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Warehouse as WarehouseIcon } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import {
   Table,
   TableBody,
@@ -19,21 +20,19 @@ export default async function WarehousesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Warehouses</h1>
-          <p className="text-muted-foreground text-sm">
-            Physical locations where your team receives and stores inventory.
-          </p>
-        </div>
-        <CreateWarehouseDialog />
-      </div>
+      <PageHeader
+        title="Warehouses"
+        description="Physical locations where your team receives and stores inventory. Each warehouse has zones, aisles, and bins."
+        action={<CreateWarehouseDialog />}
+        helpKey="warehouse.warehouses"
+      />
 
       {warehouses.length === 0 ? (
         <EmptyState
           icon={WarehouseIcon}
           title="No warehouses yet"
-          description="Add your first warehouse, then define its zones, aisles, and bins."
+          description="Add your first warehouse to start receiving inventory. You'll add zones, aisles, and bins after."
+          action={<CreateWarehouseDialog />}
         />
       ) : (
         <div className="rounded-lg border">

@@ -1,7 +1,6 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
 import { InboundShipmentStatus } from '@prisma/client';
+import { PageHeader } from '@/components/page-header';
 import {
   Table,
   TableBody,
@@ -54,34 +53,22 @@ export default async function StaffInboundShipmentDetailPage({
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <Link
-          href="/warehouse/inbound-shipments"
-          className="text-muted-foreground inline-flex items-center text-sm hover:underline"
-        >
-          <ChevronLeft className="size-4" />
-          All inbound shipments
-        </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {shipment.reference ?? `Shipment ${shipment.id.slice(0, 8)}`}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {shipment.client.name} → {shipment.warehouse.name}
-              {shipment.expectedArrivalAt
-                ? ` · expected ${shipment.expectedArrivalAt.toLocaleDateString()}`
-                : null}
-            </p>
-          </div>
-          <InboundStatusBadge status={shipment.status} />
-        </div>
-        {shipment.notes ? (
-          <p className="bg-muted/30 text-muted-foreground rounded-md border p-3 text-sm">
-            {shipment.notes}
-          </p>
-        ) : null}
-      </div>
+      <PageHeader
+        title={shipment.reference ?? `Shipment ${shipment.id.slice(0, 8)}`}
+        description={`${shipment.client.name} → ${shipment.warehouse.name}${
+          shipment.expectedArrivalAt
+            ? ` · expected ${shipment.expectedArrivalAt.toLocaleDateString()}`
+            : ''
+        }`}
+        backHref="/warehouse/inbound-shipments"
+        backLabel="All inbound shipments"
+        action={<InboundStatusBadge status={shipment.status} />}
+      />
+      {shipment.notes ? (
+        <p className="bg-muted/30 text-muted-foreground rounded-md border p-3 text-sm">
+          {shipment.notes}
+        </p>
+      ) : null}
 
       <div className="flex gap-2">
         {canStart ? <StartReceivingButton shipmentId={shipment.id} /> : null}
