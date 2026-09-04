@@ -2,7 +2,9 @@
 
 A multi-tenant 3PL (third-party logistics) warehouse and shipping platform — Next.js + TypeScript + PostgreSQL + Prisma. Four interlocking systems: a multi-tenant backbone, two front-end apps (Warehouse Dashboard + Client Portal) sharing one backend, a workflow/state engine, and an integration layer (Shopify, Amazon, WooCommerce, EasyPost, QuickBooks, Stripe).
 
-> **Status:** Planning phase. No application code exists yet. The docs in this repo are the spec; Phase 0 scaffolding is the next milestone.
+> **Status:** Phase 1 complete — 18 models, both applications, and the full
+> receive → pick → pack → ship path are built and tested. Phase 2 (returns,
+> billing and the carrier and storefront integrations) is next.
 
 ---
 
@@ -14,20 +16,36 @@ A multi-tenant 3PL (third-party logistics) warehouse and shipping platform — N
 
 ---
 
-## Repository layout
+## What is built
+
+**Two applications over one backend.** The warehouse dashboard is the operator's
+view — clients, warehouses, inbound shipments, inventory, the order queue and
+the fulfilment floor. The client portal is the brand's view of their own stock
+and orders. Both run on the same Prisma layer, separated by row-level tenancy
+rather than by duplicated code.
+
+**Tenant isolation is enforced at two levels.** Every query is scoped by
+company, and client-scoped records are scoped again by client, so a portal user
+cannot reach another brand's data even through a shared endpoint.
+
+**The fulfilment path is complete.** An order arrives (entered, or bulk-uploaded
+by CSV), stock is allocated atomically FIFO against real bin locations, then it
+moves `ALLOCATED → PICKED → PACKED → SHIPPED` through scan-to-confirm picking,
+a pack station that records box dimensions and weight, and manual label entry.
+
+**Per-line personalisation.** Clients define custom fields against their own
+catalogue — engraving text, gift notes — which follow the line through picking
+and packing.
 
 ```
 .
-├── README.md             ← this file
-├── CLAUDE.md             ← rules for every working session (read every time)
-├── docs/
-│   ├── BUILD-PLAN.md                ← phased execution plan
-│   ├── ARCHITECTURE.md              ← stack, data model, state machines, code organization
-│   ├── 3PL-Platform-Overview.md     ← stakeholder-facing overview
-│   ├── 3PL-Platform-Overview.pdf    ← PDF version of the same
-│   └── diagrams/                    ← 6 architecture diagrams + their README
-└── prisma/
-    └── schema.prisma     ← Phase 0 core tenancy schema (Company, User, Client, ClientUser)
+├── app/(warehouse)/      Operator dashboard — 21 routes
+├── app/(portal)/         Client portal — 12 routes
+├── features/            18 domain modules: orders, inventory, inbound,
+│                        fulfilment, shipping, personalization, team, …
+├── prisma/schema.prisma 18 models with row-level tenancy
+├── tests/ · e2e/        30 unit and Playwright suites
+└── docs/                Build plan, architecture, 6 diagrams
 ```
 
 ---
