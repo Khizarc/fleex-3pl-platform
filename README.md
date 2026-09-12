@@ -5,7 +5,7 @@ A multi-tenant warehouse and fulfilment platform for third-party logistics. Two 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Postgres](https://img.shields.io/badge/PostgreSQL-Prisma-336791)
-![Tests](https://img.shields.io/badge/tests-245-brightgreen)
+![Tests](https://img.shields.io/badge/tests-227-brightgreen)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088ff)
 
 ---
@@ -99,7 +99,7 @@ Any Postgres 16 instance works; the project is developed against Neon.
 
 ## Testing
 
-**245 assertions across 32 files**, in two layers.
+**227 tests across 28 files**, in two layers.
 
 Unit and integration tests run against a real Postgres instance rather than mocks,
 because the behaviour worth testing here — transactional allocation, row locking,
